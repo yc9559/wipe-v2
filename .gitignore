@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+# too big ADB systrace, ~600MB
+*.html
+
+# binary
+wipe
+
+.vscode
+build
+output

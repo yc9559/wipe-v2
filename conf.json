@@ -1,0 +1,67 @@
+{
+    "name": "wipe v2 配置文件",
+    "todoModels": [
+        "./dataset/soc_model/model_sdm660.json"
+    ],
+    "mergedWorkload": "./dataset/workload/osborn/merged.json",
+    "gaParameter": {
+        "comment": "NSGA3优化算法参数",
+        "population": 40,
+        "generation_max": 100,
+        "crossover_fraction": 0.7,
+        "mutation_rate": 0.4,
+        "eta": 0.2,
+        "thread_num": 12
+    },
+    "parameterRange": {
+        "comment": "interactive, hmp, inputboost 参数优化范围",
+        "above_hispeed_delay": {
+            "min": 0,
+            "max": 2
+        },
+        "go_hispeed_load": {
+            "min": 10,
+            "max": 99
+        },
+        "max_freq_hysteresis": {
+            "min": 0,
+            "max": 4
+        },
+        "min_sample_time": {
+            "min": 0,
+            "max": 4
+        },
+        "target_loads": {
+            "min": 1,
+            "max": 99
+        },
+        "sched_downmigrate": {
+            "min": 1,
+            "max": 99
+        },
+        "sched_upmigrate": {
+            "min": 1,
+            "max": 99
+        },
+        "sched_freq_aggregate_threshold_pct": {
+            "min": 25,
+            "max": 400
+        },
+        "sched_ravg_hist_size": {
+            "min": 1,
+            "max": 5
+        },
+        "sched_window_stats_policy": {
+            "min": 0,
+            "max": 3
+        },
+        "timer_rate": {
+            "min": 1,
+            "max": 5
+        },
+        "input_duration": {
+            "min": 0,
+            "max": 300
+        }
+    }
+}

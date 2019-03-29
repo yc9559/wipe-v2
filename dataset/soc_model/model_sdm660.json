@@ -1,0 +1,73 @@
+{
+    "name": "sdm660",
+    "device": "坚果 Pro 2",
+    "cluster": [
+        {
+            "coreNum": 4,
+            "efficiency": 1024,
+            "minFreq": 633,
+            "maxFreq": 1843,
+            "opp": [
+                633,
+                902,
+                1113,
+                1401,
+                1536,
+                1747,
+                1843
+            ],
+            "corePower": [
+                44,
+                56,
+                76,
+                108,
+                148,
+                188,
+                212
+            ],
+            "clusterPower": [
+                11,
+                14,
+                19,
+                27,
+                37,
+                47,
+                53
+            ],
+            "author": "yc9559@酷安",
+            "comment": "GPUFLOPS-1.60-MIX2-1T-32KB-2s-cpubind-2min"
+        },
+        {
+            "coreNum": 4,
+            "efficiency": 1638,
+            "minFreq": 1113,
+            "maxFreq": 2208,
+            "opp": [
+                1113,
+                1401,
+                1747,
+                1958,
+                2150,
+                2208
+            ],
+            "corePower": [
+                340,
+                464,
+                688,
+                880,
+                1072,
+                1456
+            ],
+            "clusterPower": [
+                85,
+                116,
+                172,
+                220,
+                268,
+                364
+            ],
+            "author": "yc9559@酷安",
+            "comment": "GPUFLOPS-1.60-MIX2-1T-32KB-2s-cpubind-2min"
+        }
+    ]
+}

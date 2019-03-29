@@ -1,0 +1,12 @@
+{
+    "device": "坚果 Pro 2",
+    "date": "2019-02-26T15:00:00.000Z",
+    "efficiency": 1638,
+    "freq": 2208,
+    "whitelist": [],
+    "blacklist": [
+        "baidumap-explore.html",
+        "wx-instant-app.html"
+    ],
+    "comment": "百度地图和微信小程序满负载比重太高，去除"
+}
