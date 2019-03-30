@@ -279,6 +279,7 @@ public:
 	int N_threads;
 	bool user_request_stop;
 	long idle_delay_us;
+	uint64_t rnd_seed;
 
 	function<void(thisGenerationType&)> calculate_IGA_total_fitness;
 	function<double(const thisChromosomeType&)> calculate_SO_total_fitness;
@@ -335,8 +336,53 @@ public:
 		get_shrink_scale(default_shrink_scale)
 	{
 		// initialize the random number generator with time-dependent seed
-		uint64_t timeSeed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		std::seed_seq ss{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
+		rnd_seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+		std::seed_seq ss{uint32_t(rnd_seed & 0xffffffff), uint32_t(rnd_seed>>32)};
+		rng.seed(ss);
+		std::uniform_real_distribution<double> unif(0, 1);
+		if(N_threads==0) // number of CPU cores not detected.
+			N_threads=8;
+	}
+
+	Genetic(uint64_t seed) :
+		unif_dist(0.0,1.0),
+		N_robj(0),
+		problem_mode(GA_MODE::SOGA),
+		population(50),
+		crossover_fraction(0.7),
+		mutation_rate(0.1),
+		verbose(false),
+		generation_step(-1),
+		elite_count(5),
+		generation_max(100),
+		tol_stall_average(1e-4),
+		average_stall_max(10),
+		tol_stall_best(1e-6),
+		best_stall_max(10),
+		reference_vector_divisions(0),
+		enable_reference_vectors(true),
+		multi_threading(true),
+		dynamic_threading(true),
+		N_threads(std::thread::hardware_concurrency()),
+		user_request_stop(false),
+		idle_delay_us(1000),
+		calculate_IGA_total_fitness(nullptr),
+		calculate_SO_total_fitness(nullptr),
+		calculate_MO_objectives(nullptr),
+		distribution_objective_reductions(nullptr),
+		init_genes(nullptr),
+		eval_solution(nullptr),
+		eval_solution_IGA(nullptr),
+		mutate(nullptr),
+		crossover(nullptr),
+		SO_report_generation(nullptr),
+		MO_report_generation(nullptr),
+		custom_refresh(nullptr),
+		get_shrink_scale(default_shrink_scale),
+		rnd_seed(seed)
+	{
+		// initialize the random number generator with time-dependent seed
+		std::seed_seq ss{uint32_t(rnd_seed & 0xffffffff), uint32_t(rnd_seed>>32)};
 		rng.seed(ss);
 		std::uniform_real_distribution<double> unif(0, 1);
 		if(N_threads==0) // number of CPU cores not detected.

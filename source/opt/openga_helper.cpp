@@ -32,6 +32,7 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     ga_cfg_.mutation_rate      = p["mutation_rate"];
     ga_cfg_.eta                = p["eta"];
     ga_cfg_.thread_num         = p["thread_num"];
+    ga_cfg_.random_seed        = p["random_seed"];
 
     // 解析参数搜索空间范围
     ParamDescCfg param_desc_cfg;
@@ -330,7 +331,7 @@ std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
     EA::Chronometer timer;
     timer.tic();
 
-    GA_Type ga_obj;
+    GA_Type ga_obj(ga_cfg_.random_seed);
     ga_obj.problem_mode            = EA::GA_MODE::NSGA_III;
     ga_obj.verbose                 = false;
     ga_obj.population              = ga_cfg_.population;

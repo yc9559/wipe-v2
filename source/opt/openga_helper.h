@@ -1,8 +1,8 @@
 #ifndef __OPENGA_HELPER_H
 #define __OPENGA_HELPER_H
 
-#include <vector>
 #include <string>
+#include <vector>
 #include "cpumodel.h"
 #include "openga.hpp"
 #include "sim.h"
@@ -31,12 +31,13 @@ public:
     } ParamDescCfg;
 
     typedef struct _GaCfg {
-        int   population;
-        int   generation_max;
-        float crossover_fraction;
-        float mutation_rate;
-        float eta;
-        int   thread_num;
+        int      population;
+        int      generation_max;
+        float    crossover_fraction;
+        float    mutation_rate;
+        float    eta;
+        int      thread_num;
+        uint64_t random_seed;
     } GaCfg;
 
     typedef struct _MiddleCost {

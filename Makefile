@@ -22,9 +22,9 @@ EXT_LIB_INC	:=
 EXT_LIBS	:=
 
 INC			:= $(shell find $(INC_DIR) -name '*.h')
-INC 		+= $(shell find $(INC_DIR) -name '*.hpp')
+INC			+= $(shell find $(INC_DIR) -name '*.hpp')
 SRC			:= $(shell find $(SRC_DIR) -name '*.c')
-SRC 		+= $(shell find $(SRC_DIR) -name '*.cpp')
+SRC			+= $(shell find $(SRC_DIR) -name '*.cpp')
 
 OBJS		:= $(foreach f,$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SRC))),$(BUILD_DIR)/$(f))
 INCLUDES	:= $(foreach f,$(sort $(dir $(INC))),-I$(f)) $(EXT_LIB_INC)

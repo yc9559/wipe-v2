@@ -11,7 +11,8 @@
         "crossover_fraction": 0.7,
         "mutation_rate": 0.4,
         "eta": 0.2,
-        "thread_num": 12
+        "thread_num": 12,
+        "random_seed": 23333
     },
     "parameterRange": {
         "comment": "interactive, hmp, inputboost 参数优化范围",
