@@ -13,7 +13,8 @@ WaltHmp::WaltHmp(Cfg cfg)
       governor_little_(cfg.governor_little),
       governor_big_(cfg.governor_big),
       entry_cnt_(0),
-      max_load_sum_(0) {
+      max_load_sum_(0),
+      governor_cnt_(0) {
     up_demand_thd_   = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_upmigrate;
     down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
     memset(sum_history_, 0, sizeof(int) * RavgHistSizeMax);
@@ -89,8 +90,10 @@ int WaltHmp::WaltScheduler(int max_load, const int *loads, int n_load, int now) 
         active_->busy_pct_ = AggregateLoadToBusyPctIfNeed(loads_avg, n_load);
         idle_->busy_pct_   = 0;
 
-        little_->SetCurfreq(governor_little_->InteractiveTimer(little_->busy_pct_, now));
-        big_->SetCurfreq(governor_big_->InteractiveTimer(big_->busy_pct_, now));
+        little_->SetCurfreq(governor_little_->InteractiveTimer(little_->busy_pct_, governor_cnt_));
+        big_->SetCurfreq(governor_big_->InteractiveTimer(big_->busy_pct_, governor_cnt_));
+
+        ++governor_cnt_;
 
         entry_cnt_ = 0;
         max_load_sum_ = 0;

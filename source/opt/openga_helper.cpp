@@ -238,6 +238,7 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
     // WALT HMP 调速器参数上下限
     t.sched.sched_downmigrate                  = QuatLoadParam(*it_seq++, *it_desc++);
     t.sched.sched_upmigrate                    = QuatLoadParam(*it_seq++, *it_desc++);
+    t.sched.sched_upmigrate                    = std::max(t.sched.sched_downmigrate, t.sched.sched_upmigrate);
     t.sched.sched_freq_aggregate_threshold_pct = QuatLargeParam(*it_seq++, 25, *it_desc++);
     t.sched.sched_ravg_hist_size               = Quantify(*it_seq++, *it_desc++);
     t.sched.sched_window_stats_policy          = Quantify(*it_seq++, *it_desc++);

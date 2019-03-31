@@ -480,7 +480,7 @@ public:
 
 	StopReason solve_next_generation()
 	{
-		if (generation_step % 10 == 0) {
+		if (generation_step % 50 == 0) {
 			printf("current generation: %d\n", generation_step);
 		}
 		Chronometer timer;

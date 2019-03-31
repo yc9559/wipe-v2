@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 
-Sim::Score Sim::Run(const Workload &workload, Soc &soc) {
+Sim::Score Sim::Run(const Workload &workload, Soc soc) {
     const int base_pwr = QuantifyPower(800 * 100);
 
     Interactive little_governor(tunables_.interactive[0], &soc.clusters_[0]);
@@ -29,9 +29,8 @@ Sim::Score Sim::Run(const Workload &workload, Soc &soc) {
 
         AdaptLoad(w.max_load, capacity);
         AdaptLoad(w.load, workload.core_num_, capacity);
-        for (const auto &cl : soc.clusters_) {
-            power_comsumed += QuantifyPower(cl.CalcPower(w.load));
-        }
+
+        power_comsumed += QuantifyPower(hmp.CalcPower(w.load));
 
         input.HandleInput(soc, w.has_input_event, quantum_cnt);
         capacity = hmp.WaltScheduler(w.max_load, w.load, workload.core_num_, quantum_cnt);
@@ -57,7 +56,6 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
 
     std::vector<bool> render_lag_seq;
     render_lag_seq.reserve(capacity_log.size());
-    int n_lag = 0;
 
     for (const auto &r : workload.render_load_) {
         int aggreated_capacity = 0;
@@ -66,12 +64,21 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
         aggreated_capacity += capacity_log[r.window_idxs[2]] * r.window_quantums[2];
         aggreated_capacity /= workload.frame_quantum_;
         render_lag_seq.push_back(r.frame_load > aggreated_capacity);
-        if (r.frame_load > aggreated_capacity) {
-            ++n_lag;
-        }
     }
 
-    float ratio = (float)n_lag / workload.render_load_.size();
+    int n_lag = 0;
+    for (const auto &lag : render_lag_seq) {
+        n_lag += lag;
+    }
+    double render_lag_ratio = n_lag / (double)workload.render_load_.size();
 
-    return (ratio / default_score_.performance);
+    n_lag = 0;
+    for (const auto &lag : common_lag_seq) {
+        n_lag += lag;
+    }
+    double common_lag_ratio = n_lag / (double)workload.windowed_load_.size();
+
+    double score = 0.6 * render_lag_ratio + 0.4 * common_lag_ratio;
+
+    return (score / default_score_.performance);
 }

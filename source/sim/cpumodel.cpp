@@ -9,10 +9,6 @@ Cluster::Cluster(Model model) : model_(model) {
     cur_opp_idx_ = 0;
     SetMinfreq(model.min_freq);
     SetCurfreq(model.max_freq);
-    // printf("%d,%d,%d\n", cur_freq_, min_opp_idx_, cur_opp_idx_);
-    // for (auto x : model_.opp_model) {
-    //     printf("%d,%d,%d\n", x.freq, x.core_power, x.cluster_power);
-    // }
 }
 
 Soc::Soc(const std::string &model_file) {

@@ -84,7 +84,9 @@ private:
 };
 
 inline std::vector<double> OpengaAdapter::CalcMultiObjectives(const GA_Type::thisChromosomeType &X) {
-    return {X.middle_costs.c1, X.middle_costs.c2};
+    // result.c1 = score.performance;   // 卡顿程度，越小越好
+    // result.c2 = score.battery_life;  // 续航，越大越好
+    return {X.middle_costs.c1, -X.middle_costs.c2};
 }
 
 #endif

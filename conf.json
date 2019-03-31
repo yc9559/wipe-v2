@@ -5,7 +5,7 @@
     ],
     "mergedWorkload": "./dataset/workload/osborn/merged.json",
     "gaParameter": {
-        "comment": "NSGA3优化算法参数",
+        "comment": "NSGA3优化算法参数，开启多线程后固定的随机数种子不能带来固定的结果，因为线程访问随机数的顺序不定",
         "population": 40,
         "generation_max": 100,
         "crossover_fraction": 0.7,

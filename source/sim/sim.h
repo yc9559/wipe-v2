@@ -59,7 +59,7 @@ public:
     } Score;
 
     Sim(const Tunables &tunables, const Score &default_score) : tunables_(tunables), default_score_(default_score){};
-    Score  Run(const Workload &workload, Soc &soc);
+    Score  Run(const Workload &workload, Soc soc);
 
 private:
     int  QuantifyPower(int power);
