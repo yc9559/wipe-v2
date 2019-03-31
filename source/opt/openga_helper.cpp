@@ -227,10 +227,15 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
         t.interactive[idx].go_hispeed_load     = QuatLoadParam(*it_seq++, *it_desc++);
         t.interactive[idx].min_sample_time     = Quantify(*it_seq++, *it_desc++);
         t.interactive[idx].max_freq_hysteresis = Quantify(*it_seq++, *it_desc++);
-        for (int i = 0; i < std::min(ABOVE_DELAY_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+
+        int n_opp = cluster.model_.opp_model.size();
+        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+
+        for (int i = 0; i < n_above; ++i) {
             t.interactive[idx].above_hispeed_delay[i] = Quantify(*it_seq++, *it_desc++);
         }
-        for (int i = 0; i < std::min(TARGET_LOAD_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+        for (int i = 0; i < n_targetloads; ++i) {
             t.interactive[idx].target_loads[i] = QuatLoadParam(*it_seq++, *it_desc++);
         }
         idx++;
@@ -262,10 +267,15 @@ void OpengaAdapter::InitParamDesc(const ParamDescCfg &p) {
         param_desc_.push_back(p.go_hispeed_load);
         param_desc_.push_back(p.min_sample_time);
         param_desc_.push_back(p.max_freq_hysteresis);
-        for (int i = 0; i < std::min(ABOVE_DELAY_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+
+        int n_opp = cluster.model_.opp_model.size();
+        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+        
+        for (int i = 0; i < n_above; ++i) {
             param_desc_.push_back(p.above_hispeed_delay);
         }
-        for (int i = 0; i < std::min(TARGET_LOAD_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+        for (int i = 0; i < n_targetloads; ++i) {
             param_desc_.push_back(p.target_loads);
         }
     }
@@ -294,10 +304,15 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
         t.interactive[idx].go_hispeed_load     = 90;
         t.interactive[idx].min_sample_time     = 2;
         t.interactive[idx].max_freq_hysteresis = 2;
-        for (int i = 0; i < std::min(ABOVE_DELAY_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+
+        int n_opp = cluster.model_.opp_model.size();
+        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+        
+        for (int i = 0; i < n_above; ++i) {
             t.interactive[idx].above_hispeed_delay[i] = 1;
         }
-        for (int i = 0; i < std::min(TARGET_LOAD_MAX_LEN, (int)cluster.model_.opp_model.size()); ++i) {
+        for (int i = 0; i < n_targetloads; ++i) {
             t.interactive[idx].target_loads[i] = 90;
         }
         idx++;

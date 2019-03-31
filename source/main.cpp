@@ -6,12 +6,7 @@
 #include "workload.h"
 #include "openga_helper.h"
 #include "json.hpp"
-
-void PrintResultCSV(const std::vector<OpengaAdapter::Result> &r) {
-    for (const auto &s : r) {
-        printf("%f,%f\n", s.score.performance, s.score.battery_life);
-    }
-}
+#include "dump.h"
 
 int main() {
     nlohmann::json j;
@@ -33,7 +28,9 @@ int main() {
         Soc soc(model);
         OpengaAdapter nsga3_opt(&soc, &w, "./conf.json");
         auto ret = nsga3_opt.Optimize();
-        PrintResultCSV(ret);
+        Dumper dumper(soc, "./output/");
+        dumper.DumpToTXT(ret);
+        dumper.DumpToCSV(ret);
     }
 
     return 0;

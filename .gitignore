@@ -35,8 +35,8 @@
 *.html
 
 # binary
-wipe
+/wipe
 
-.vscode
-build
-output
+/.vscode
+/build
+/output
