@@ -66,14 +66,14 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
     buf << "sched_freq_aggregate_threshold_pct: " << t.sched.sched_freq_aggregate_threshold_pct << endl;
     buf << "sched_ravg_hist_size: " << t.sched.sched_ravg_hist_size << endl;
     buf << "sched_window_stats_policy: " << t.sched.sched_window_stats_policy << endl;
-    buf << "timer_rate: " << Quantum2Ms(t.sched.timer_rate) << endl;
+    buf << "timer_rate: " << Ms2Us(Quantum2Ms(t.sched.timer_rate)) << endl;
     buf << endl;
 
     buf << "[input boost]" << endl << endl;
     for (idx_cluster = 0; idx_cluster < soc_.clusters_.size(); ++idx_cluster) {
         buf << "cluster " << idx_cluster << ": " << t.input.boost_freq[idx_cluster] << endl;
     }
-    buf << "ms: " << Ms2Us(Quantum2Ms(t.input.duration_quantum)) << endl;
+    buf << "ms: " << Quantum2Ms(t.input.duration_quantum) << endl;
     buf << endl;
 
     return buf.str();

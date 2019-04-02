@@ -69,7 +69,7 @@ private:
             loads[i] = std::min(loads[i], capacity);
         }
     }
-    double EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<int> &capacity_log);
+    double EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log);
     double EvalBatterylife(uint64_t power_comsumed) const {
         return (1.0 / power_comsumed / default_score_.battery_life);
     };

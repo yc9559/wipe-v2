@@ -6,19 +6,19 @@
     "mergedWorkload": "./dataset/workload/osborn/merged.json",
     "gaParameter": {
         "comment": "NSGA3优化算法参数，开启多线程后固定的随机数种子不能带来固定的结果，因为线程访问随机数的顺序不定",
-        "population": 400,
-        "generation_max": 1000,
-        "crossover_fraction": 0.7,
+        "population": 1000,
+        "generation_max": 1500,
+        "crossover_fraction": 0.9,
         "mutation_rate": 0.4,
-        "eta": 0.2,
-        "thread_num": 12,
+        "eta": 0.05,
+        "thread_num": 6,
         "random_seed": 23333
     },
     "parameterRange": {
         "comment": "interactive, hmp, inputboost 参数优化范围",
         "above_hispeed_delay": {
             "min": 1,
-            "max": 8
+            "max": 12
         },
         "go_hispeed_load": {
             "min": 10,
@@ -26,11 +26,11 @@
         },
         "max_freq_hysteresis": {
             "min": 1,
-            "max": 8
+            "max": 12
         },
         "min_sample_time": {
             "min": 1,
-            "max": 8
+            "max": 12
         },
         "target_loads": {
             "min": 1,
