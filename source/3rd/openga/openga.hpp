@@ -480,8 +480,9 @@ public:
 
 	StopReason solve_next_generation()
 	{
-		if (generation_step % 50 == 0) {
-			printf("current generation: %d\n", generation_step);
+		if (generation_step % 20 == 19) {
+			printf("\rcurrent generation: %4d / %4d ", generation_step + 1, generation_max);
+			fflush(stdout);
 		}
 		Chronometer timer;
 		timer.tic();
@@ -512,7 +513,10 @@ public:
 	StopReason solve()
 	{
 		StopReason stop=StopReason::Undefined;
+		printf("population initializing... ");
+		fflush(stdout);
 		solve_init();
+		printf("\rpopulation initialized     \n");
 		while(stop==StopReason::Undefined)
 			stop=solve_next_generation();
 		show_stop_reason(stop);

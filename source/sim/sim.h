@@ -56,10 +56,11 @@ public:
     typedef struct _Score {
         double performance;
         double battery_life;
+        double idle_lasting;
     } Score;
 
     Sim(const Tunables &tunables, const Score &default_score) : tunables_(tunables), default_score_(default_score){};
-    Score  Run(const Workload &workload, Soc soc);
+    Score Run(const Workload &workload, const Workload &idleload, Soc soc);
 
 private:
     int  QuantifyPower(int power);
@@ -72,7 +73,10 @@ private:
     double EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log);
     double EvalBatterylife(uint64_t power_comsumed) const {
         return (1.0 / power_comsumed / default_score_.battery_life);
-    };
+    }
+    double EvalIdleLasting(uint64_t idle_power_comsumed) const {
+        return (1.0 / idle_power_comsumed / default_score_.idle_lasting);
+    }
 
     Tunables tunables_;
     Score    default_score_;

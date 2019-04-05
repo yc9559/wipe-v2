@@ -1,10 +1,11 @@
 #include "sim.h"
 #include <cmath>
-#include <vector>
 #include <iostream>
+#include <vector>
 
-Sim::Score Sim::Run(const Workload &workload, Soc soc) {
-    const int base_pwr = QuantifyPower(800 * 100);
+Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc) {
+    const int base_pwr      = QuantifyPower(800 * 100);
+    const int idle_base_pwr = QuantifyPower(50 * 100);
 
     Interactive little_governor(tunables_.interactive[0], &soc.clusters_[0]);
     Interactive big_governor(tunables_.interactive[1], &soc.clusters_[1]);
@@ -39,30 +40,46 @@ Sim::Score Sim::Run(const Workload &workload, Soc soc) {
         quantum_cnt++;
     }
 
-    Score ret = {EvalPerformance(workload, soc, capacity_log), EvalBatterylife(power_comsumed)};
+    uint64_t idle_power_comsumed = idle_base_pwr * idleload.windowed_load_.size();
+
+    for (Workload::LoadSlice w : idleload.windowed_load_) {
+        AdaptLoad(w.max_load, capacity);
+        AdaptLoad(w.load, idleload.core_num_, capacity);
+
+        idle_power_comsumed += QuantifyPower(hmp.CalcPowerForIdle(w.load));
+
+        input.HandleInput(soc, w.has_input_event, quantum_cnt);
+        capacity = hmp.WaltScheduler(w.max_load, w.load, idleload.core_num_, quantum_cnt);
+
+        quantum_cnt++;
+    }
+
+    double perf         = EvalPerformance(workload, soc, capacity_log);
+    double work_lasting = EvalBatterylife(power_comsumed);
+    double idle_lasting = EvalIdleLasting(idle_power_comsumed);
+
+    Score ret = {perf, work_lasting, idle_lasting};
     return ret;
 }
 
 inline double PartitionEval(const std::vector<bool> &lag_seq) {
-    const int kPartitionLen = 200;
+    const int kPartitionLen = 400;
 
-    int n_partition = lag_seq.size() / kPartitionLen;
+    int              n_partition = lag_seq.size() / kPartitionLen;
     std::vector<int> period_lag_arr;
     period_lag_arr.reserve(n_partition);
 
-    int cnt = 1;
+    int cnt            = 1;
     int period_lag_cnt = 0;
     for (const auto &is_lag : lag_seq) {
         if (cnt == kPartitionLen) {
             period_lag_arr.push_back(period_lag_cnt);
             period_lag_cnt = 0;
-            cnt = 0;
+            cnt            = 0;
         }
         period_lag_cnt += is_lag;
         ++cnt;
     }
-
-    // std::sort(period_lag_arr.begin(), period_lag_arr.end());
 
     int64_t sum = 0;
     for (const auto &l : period_lag_arr) {
@@ -100,7 +117,7 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
     double render_lag_ratio = PartitionEval(render_lag_seq);
     double common_lag_ratio = PartitionEval(common_lag_seq);
 
-    double score = 0.85 * render_lag_ratio + 0.15 * common_lag_ratio;
+    double score = 0.9 * render_lag_ratio + 0.1 * common_lag_ratio;
 
     return (score / default_score_.performance);
 }

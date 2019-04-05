@@ -40,9 +40,17 @@ public:
         uint64_t random_seed;
     } GaCfg;
 
+    typedef struct _MiscConst {
+        double idle_fraction;
+        double work_fraction;
+        double idle_lasting_min;
+        double performance_max;
+    } MiscConst;
+
     typedef struct _MiddleCost {
         double c1;
         double c2;
+        double c3;
     } MiddleCost;
 
     typedef struct _Result {
@@ -55,7 +63,7 @@ public:
     typedef EA::Genetic<ParamSeq, MiddleCost> GA_Type;
     typedef std::function<double(void)>       RandomFunc;
 
-    OpengaAdapter(Soc *soc, Workload *workload, const std::string &ga_cfg_file);
+    OpengaAdapter(Soc *soc, const Workload *workload, const Workload *idleload, const std::string &ga_cfg_file);
     std::vector<OpengaAdapter::Result> Optimize(void);
 
 private:
@@ -75,18 +83,21 @@ private:
     void InitDefaultPowersum();
     void ParseCfgFile(const std::string &ga_cfg_file);
 
-    Soc *      soc_;
-    Workload * workload_;
-    Sim::Score default_score_;
-    int        param_len_;
-    ParamDesc  param_desc_;
-    GaCfg      ga_cfg_;
+    Soc *           soc_;
+    const Workload *workload_;
+    const Workload *idleload_;
+    Sim::Score      default_score_;
+    int             param_len_;
+    ParamDesc       param_desc_;
+    GaCfg           ga_cfg_;
+    MiscConst       misc_;
 };
 
 inline std::vector<double> OpengaAdapter::CalcMultiObjectives(const GA_Type::thisChromosomeType &X) {
     // result.c1 = score.performance;   // 卡顿程度，越小越好
-    // result.c2 = score.battery_life;  // 续航，越大越好
-    return {X.middle_costs.c1, -X.middle_costs.c2};
+    // result.c2 = score.battery_life;  // 亮屏续航，越大越好
+    // result.c3 = score.idle_lasting   // 灭屏待机，越大越好
+    return {X.middle_costs.c1, -(misc_.work_fraction * X.middle_costs.c2 + misc_.idle_fraction * X.middle_costs.c3)};
 }
 
 #endif

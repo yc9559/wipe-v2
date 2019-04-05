@@ -90,6 +90,7 @@ void Dumper::DumpToTXT(const std::vector<OpengaAdapter::Result> &results) const 
         ofs << ">>> " << idx_ind << " <<<" << endl;
         ofs << "performance: " << Double2Pct(r.score.performance) << endl;
         ofs << "battery_life: " << Double2Pct(r.score.battery_life) << endl;
+        ofs << "idle_lasting: " << Double2Pct(r.score.idle_lasting) << endl;
         ofs << endl;
         ofs << SimTunable2String(r.tunable);
         idx_ind++;
@@ -106,6 +107,7 @@ void Dumper::DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const 
     for (const auto &r: results) {
         ofs << Double2Pct(r.score.performance) << ',';
         ofs << Double2Pct(r.score.battery_life) << ',';
+        ofs << Double2Pct(r.score.idle_lasting) << ',';
         ofs << idx_ind;
         ofs << endl;
         idx_ind++;

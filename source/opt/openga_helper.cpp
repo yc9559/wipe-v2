@@ -5,8 +5,8 @@
 #include "json.hpp"
 #include "interactive.h"
 
-OpengaAdapter::OpengaAdapter(Soc *soc, Workload *workload, const std::string &ga_cfg_file)
-    : soc_(soc), workload_(workload) {
+OpengaAdapter::OpengaAdapter(Soc *soc, const Workload *workload, const Workload *idleload, const std::string &ga_cfg_file)
+    : soc_(soc), workload_(workload), idleload_(idleload) {
     ParseCfgFile(ga_cfg_file);
     InitDefaultScore();
 };
@@ -25,7 +25,6 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
 
     // 解析NSGA3相关参数
     auto p = j["gaParameter"];
-
     ga_cfg_.population         = p["population"];
     ga_cfg_.generation_max     = p["generation_max"];
     ga_cfg_.crossover_fraction = p["crossover_fraction"];
@@ -33,6 +32,13 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     ga_cfg_.eta                = p["eta"];
     ga_cfg_.thread_num         = p["thread_num"];
     ga_cfg_.random_seed        = p["random_seed"];
+
+    // 解析结果的分数限制和可调占比
+    auto misc = j["miscSettings"];
+    misc_.idle_fraction    = misc["powerConsumption.idleFraction"];
+    misc_.work_fraction    = misc["powerConsumption.workFraction"];
+    misc_.idle_lasting_min = misc["scoreRangeLimit.idleLastingMin"];
+    misc_.performance_max  = misc["scoreRangeLimit.performanceMax"];
 
     // 解析参数搜索空间范围
     ParamDescCfg param_desc_cfg;
@@ -186,11 +192,14 @@ bool OpengaAdapter::EvalParamSeq(const ParamSeq &param_seq, MiddleCost &result) 
     Sim::Tunables t = TranslateParamSeq(param_seq);
 
     Sim        sim(t, default_score_);
-    Sim::Score score = sim.Run(*workload_, *soc_);
+    Sim::Score score = sim.Run(*workload_, *idleload_, *soc_);
 
     result.c1 = score.performance;
     result.c2 = score.battery_life;
-    return true;
+    result.c3 = score.idle_lasting;
+
+    bool pass = (score.idle_lasting > misc_.idle_lasting_min) && (score.performance < misc_.performance_max);
+    return pass;
 }
 
 inline int Quantify(double ratio, const OpengaAdapter::ParamDescElement &desc) {
@@ -336,10 +345,10 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
 
 void OpengaAdapter::InitDefaultScore() {
     Sim::Tunables t = GenerateDefaultTunables();
-    Sim::Score    s = {1.0, 1.0};
+    Sim::Score    s = {1.0, 1.0, 1.0};
 
     Sim sim(t, s);
-    default_score_ = sim.Run(*workload_, *soc_);
+    default_score_ = sim.Run(*workload_, *idleload_, *soc_);
 }
 
 std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
@@ -369,9 +378,11 @@ std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
         ga_obj.multi_threading = true;
     }
 
+    std::cout << "\nTarget: " << soc_->name_ << std::endl;
+
     ga_obj.solve();
 
-    std::cout << "The problem is optimized in " << timer.toc() << " seconds." << std::endl;
+    std::cout << "\nOptimized in " << timer.toc() << " seconds." << std::endl;
 
     std::vector<Result> ret;
     ret.reserve(ga_obj.last_generation.fronts[0].size());
@@ -382,6 +393,7 @@ std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
         r.tunable              = TranslateParamSeq(chromosome.genes);
         r.score.performance    = chromosome.middle_costs.c1;
         r.score.battery_life   = chromosome.middle_costs.c2;
+        r.score.idle_lasting   = chromosome.middle_costs.c3;
         ret.push_back(r);
     }
 

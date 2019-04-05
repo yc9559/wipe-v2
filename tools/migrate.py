@@ -31,15 +31,15 @@ idle_freq = 2014
 idle_load_seq = list()
 with open('standby_load_20180308_from_171023.csv', 'r') as f:
     for line in f:
-        idle_load_seq.append(min(100, int(line) + 10))
+        idle_load_seq.append(min(100, int(line) + 5))
 
 # 全长1000，取前800
 windowed_idle_load_seq = list()
-for demand in idle_load_seq[:800]:
+for demand in idle_load_seq:
     windowed_idle_load_seq.append([demand, demand, demand, demand, demand, 0])
 
 # 加一个触摸事件
-windowed_idle_load_seq[400][-1] = 1
+# windowed_idle_load_seq[400][-1] = 1
 
 packed_data = {
     'src':              'standby_load_20180308_from_171023.csv',
@@ -54,7 +54,7 @@ packed_data = {
     'coreNum':          trace_cpuid_high - trace_cpuid_low + 1,
     'windowedLoadLen':  len(windowed_idle_load_seq),
     'windowedLoad':     windowed_idle_load_seq,
-    'renderLoad':       []
+    'renderLoad':       [[0, 0],]
 }
 with open(out_path + 'idle' + '.json', 'w') as f:
     json.dump(packed_data, f, indent=None, separators=(',', ':'))

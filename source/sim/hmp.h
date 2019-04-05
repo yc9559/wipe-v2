@@ -32,6 +32,7 @@ public:
     WaltHmp(Cfg cfg);
     int WaltScheduler(int max_load, const int *loads, int n_load, int now);
     int  CalcPower(const int *loads) const;
+    int  CalcPowerForIdle(const int *loads) const;
 
 private:
 #define RavgHistSizeMax 5
@@ -87,6 +88,12 @@ inline int WaltHmp::CalcPower(const int *loads) const {
     pwr += active_->CalcPower(load_pcts);
     pwr += idle_->CalcPower(idle_load_pcts);
     return pwr;
+}
+
+// 不考虑C-state的功耗计算
+inline int WaltHmp::CalcPowerForIdle(const int *loads) const {
+    const int full_load_pcts[] = {99, 99, 99, 99};
+    return active_->CalcPower(full_load_pcts);
 }
 
 #endif

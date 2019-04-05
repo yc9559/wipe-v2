@@ -22,11 +22,14 @@ int main() {
 
     auto todo_models = j["todoModels"];
     auto workload = j["mergedWorkload"];
+    auto idleload = j["idleWorkload"];
+
+    Workload work(workload);
+    Workload idle(idleload);
 
     for (const auto &model : todo_models) {
-        Workload w(workload);
         Soc soc(model);
-        OpengaAdapter nsga3_opt(&soc, &w, "./conf.json");
+        OpengaAdapter nsga3_opt(&soc, &work, &idle, "./conf.json");
         auto ret = nsga3_opt.Optimize();
         Dumper dumper(soc, "./output/");
         dumper.DumpToTXT(ret);
