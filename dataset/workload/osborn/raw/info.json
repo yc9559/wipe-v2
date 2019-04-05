@@ -3,10 +3,35 @@
     "date": "2019-02-26T15:00:00.000Z",
     "efficiency": 1638,
     "freq": 2208,
-    "whitelist": [],
-    "blacklist": [
-        "baidumap-explore.html",
-        "wx-instant-app.html"
-    ],
-    "comment": "百度地图和微信小程序满负载比重太高，去除"
+    "onscreen": {
+        "comment": "用于评估使用时性能和续航，在仿真器内会顺序执行，百度地图和微信小程序满负载比重太高，去除",
+        "loadSeq": [
+           "bili-danmu.html",
+           "bili-feed.html",
+           "coolapk-feed.html",
+           "game-7days-city-boss.html",
+           "game-7days-city-regular.html",
+           "meituan-explore.html",
+           "qq-chat.html",
+           "qq-qzone.html",
+           "share-feed.html",
+           "taobao-international-explore.html",
+           "task-switch.html",
+           "tieba-lite.html",
+           "twitter-feed.html",
+           "via-iphonexs-intro.html",
+           "wx-chat.html",
+           "wx-gongzhonghao.html",
+           "wx-moment.html",
+           "wx-select-pic.html",
+           "xianyu-search.html",
+           "bili-download.html"
+        ]
+    },
+    "offscreen": {
+        "comment": "用于评估待机时续航，在仿真器内会顺序执行，注意需要bili-download.html先拉高负载再进入待机检查，来避免借助过高的above绕过待机耗电检查即使高频的targetload很低很难降频省电",
+        "loadSeq": [
+            "idle-music.html"
+        ]
+    }
 }

@@ -207,27 +207,24 @@ def merge_packed_seq(packed_loads_seq_arr, packed_render_loads_seq_arr):
         idx_quantum_base += len(packed_loads_seq) * int(window_sec / quantum_sec)
     return merged_loads, merged_renders
 
-def parse_load_set(set_path, out_path, need_merge):
+def parse_load_set(set_path, out_path, sector_key):
     info_filename = 'info.json'
     info = None
     with open(set_path + info_filename, 'r') as filename:
         info = json.load(filename)
+    sector = info[sector_key]
     
-    if len(info['whitelist']):
-        todos = info['whitelist']
-        blacklist = []
+    if len(sector['loadSeq']):
+        todos = sector['loadSeq']
     else:
-        t = os.listdir(set_path)
-        todos = [x for x in t if x.split('.')[-1] == 'html']
-        blacklist = info['blacklist']
+        print("ERROR: " + sector_key + ".loadSeq is empty")
+        exit(-1)
 
     name_arr = list()
     packed_loads_seq_arr = list()
     packed_render_loads_seq_arr = list()
 
     for filename in todos:
-        if filename in blacklist:
-            continue
         packed_loads_seq, packed_render_loads_seq = parse_trace(set_path + filename)
         name_arr.append(filename)
         packed_loads_seq_arr.append(packed_loads_seq)
@@ -267,7 +264,7 @@ def parse_load_set(set_path, out_path, need_merge):
             'windowedLoad':     merged_loads,
             'renderLoad':       merged_renders
         }
-        with open(out_path + 'merged' + '.json', 'w') as f:
+        with open(out_path + sector_key + '-merged' + '.json', 'w') as f:
             json.dump(packed_data, f, indent=None, separators=(',', ':'))
     return
 
@@ -278,5 +275,6 @@ def parse_load_set(set_path, out_path, need_merge):
 #     # 'trace.html'
 # ]
 
-parse_load_set(raw_path, out_path, False)
+parse_load_set(raw_path, out_path, "onscreen")
+parse_load_set(raw_path, out_path, "offscreen")
 # parse_trace(todos[0])

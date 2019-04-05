@@ -91,6 +91,7 @@ private:
     ParamDesc       param_desc_;
     GaCfg           ga_cfg_;
     MiscConst       misc_;
+    Sim::MiscConst  sim_misc_;
 };
 
 inline std::vector<double> OpengaAdapter::CalcMultiObjectives(const GA_Type::thisChromosomeType &X) {

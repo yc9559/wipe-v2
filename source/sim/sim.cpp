@@ -4,8 +4,8 @@
 #include <vector>
 
 Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc) {
-    const int base_pwr      = QuantifyPower(800 * 100);
-    const int idle_base_pwr = QuantifyPower(50 * 100);
+    const int base_pwr      = QuantifyPower(misc_.working_base_mw * 100);
+    const int idle_base_pwr = QuantifyPower(misc_.idle_base_mw * 100);
 
     Interactive little_governor(tunables_.interactive[0], &soc.clusters_[0]);
     Interactive big_governor(tunables_.interactive[1], &soc.clusters_[1]);
@@ -62,17 +62,16 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc)
     return ret;
 }
 
-inline double PartitionEval(const std::vector<bool> &lag_seq) {
-    const int kPartitionLen = 400;
+inline double PartitionEval(const std::vector<bool> &lag_seq, int partition_len) {
+    int n_partition = lag_seq.size() / partition_len;
 
-    int              n_partition = lag_seq.size() / kPartitionLen;
     std::vector<int> period_lag_arr;
     period_lag_arr.reserve(n_partition);
 
     int cnt            = 1;
     int period_lag_cnt = 0;
     for (const auto &is_lag : lag_seq) {
-        if (cnt == kPartitionLen) {
+        if (cnt == partition_len) {
             period_lag_arr.push_back(period_lag_cnt);
             period_lag_cnt = 0;
             cnt            = 0;
@@ -87,11 +86,13 @@ inline double PartitionEval(const std::vector<bool> &lag_seq) {
     }
     double l2_regularization = std::sqrt(sum);
 
-    return (l2_regularization / kPartitionLen);
+    return (l2_regularization / partition_len);
 }
 
 double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log) {
-    auto is_lag = [=](int required, int provided) { return (required < 1958 * 100 * 1638) && (required > provided); };
+    const auto &big = soc.clusters_[1].model_;
+    const uint32_t enough_capacity = big.max_freq * big.efficiency * misc_.enough_capacity_pct;
+    auto is_lag = [=](int required, int provided) { return (required < enough_capacity) && (required > provided); };
 
     std::vector<bool> common_lag_seq;
     common_lag_seq.reserve(capacity_log.size());
@@ -114,10 +115,10 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
         render_lag_seq.push_back(is_lag(r.frame_load, aggreated_capacity));
     }
 
-    double render_lag_ratio = PartitionEval(render_lag_seq);
-    double common_lag_ratio = PartitionEval(common_lag_seq);
+    double render_lag_ratio = PartitionEval(render_lag_seq, misc_.partition_len);
+    double common_lag_ratio = PartitionEval(common_lag_seq, misc_.partition_len);
 
-    double score = 0.9 * render_lag_ratio + 0.1 * common_lag_ratio;
+    double score = misc_.render_fraction * render_lag_ratio + misc_.common_fraction * common_lag_ratio;
 
     return (score / default_score_.performance);
 }

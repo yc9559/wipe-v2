@@ -26,19 +26,26 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     // 解析NSGA3相关参数
     auto p = j["gaParameter"];
     ga_cfg_.population         = p["population"];
-    ga_cfg_.generation_max     = p["generation_max"];
-    ga_cfg_.crossover_fraction = p["crossover_fraction"];
-    ga_cfg_.mutation_rate      = p["mutation_rate"];
+    ga_cfg_.generation_max     = p["generationMax"];
+    ga_cfg_.crossover_fraction = p["crossoverFraction"];
+    ga_cfg_.mutation_rate      = p["mutationRate"];
     ga_cfg_.eta                = p["eta"];
-    ga_cfg_.thread_num         = p["thread_num"];
-    ga_cfg_.random_seed        = p["random_seed"];
+    ga_cfg_.thread_num         = p["threadNum"];
+    ga_cfg_.random_seed        = p["randomSeed"];
 
     // 解析结果的分数限制和可调占比
     auto misc = j["miscSettings"];
-    misc_.idle_fraction    = misc["powerConsumption.idleFraction"];
-    misc_.work_fraction    = misc["powerConsumption.workFraction"];
-    misc_.idle_lasting_min = misc["scoreRangeLimit.idleLastingMin"];
-    misc_.performance_max  = misc["scoreRangeLimit.performanceMax"];
+    misc_.idle_fraction    = misc["ga.cost.batteryScore.idleFraction"];
+    misc_.work_fraction    = misc["ga.cost.batteryScore.workFraction"];
+    misc_.idle_lasting_min = misc["ga.cost.limit.idleLastingMin"];
+    misc_.performance_max  = misc["ga.cost.limit.performanceMax"];
+
+    sim_misc_.common_fraction     = misc["sim.perf.commonFraction"];
+    sim_misc_.render_fraction     = misc["sim.perf.renderFraction"];
+    sim_misc_.enough_capacity_pct = misc["sim.perf.enoughCapacityPct"];
+    sim_misc_.partition_len       = misc["sim.perf.partitionLen"];
+    sim_misc_.working_base_mw     = misc["sim.power.workingBase_mw"];
+    sim_misc_.idle_base_mw        = misc["sim.power.idleBase_mw"];
 
     // 解析参数搜索空间范围
     ParamDescCfg param_desc_cfg;
@@ -191,7 +198,7 @@ void OpengaAdapter::MO_report_generation(int                                    
 bool OpengaAdapter::EvalParamSeq(const ParamSeq &param_seq, MiddleCost &result) {
     Sim::Tunables t = TranslateParamSeq(param_seq);
 
-    Sim        sim(t, default_score_);
+    Sim        sim(t, default_score_, sim_misc_);
     Sim::Score score = sim.Run(*workload_, *idleload_, *soc_);
 
     result.c1 = score.performance;
@@ -347,7 +354,7 @@ void OpengaAdapter::InitDefaultScore() {
     Sim::Tunables t = GenerateDefaultTunables();
     Sim::Score    s = {1.0, 1.0, 1.0};
 
-    Sim sim(t, s);
+    Sim sim(t, s, sim_misc_);
     default_score_ = sim.Run(*workload_, *idleload_, *soc_);
 }
 

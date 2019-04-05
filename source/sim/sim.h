@@ -59,7 +59,17 @@ public:
         double idle_lasting;
     } Score;
 
-    Sim(const Tunables &tunables, const Score &default_score) : tunables_(tunables), default_score_(default_score){};
+    typedef struct _MiscConst {
+        double enough_capacity_pct;
+        double render_fraction;
+        double common_fraction;
+        int    working_base_mw;
+        int    idle_base_mw;
+        int    partition_len;
+    } MiscConst;
+
+    Sim(const Tunables &tunables, const Score &default_score, const MiscConst &misc)
+        : tunables_(tunables), default_score_(default_score), misc_(misc){};
     Score Run(const Workload &workload, const Workload &idleload, Soc soc);
 
 private:
@@ -78,8 +88,9 @@ private:
         return (1.0 / idle_power_comsumed / default_score_.idle_lasting);
     }
 
-    Tunables tunables_;
-    Score    default_score_;
+    Tunables  tunables_;
+    MiscConst misc_;
+    Score     default_score_;
 };
 
 inline int Sim::QuantifyPower(int power) {

@@ -3,24 +3,30 @@
     "todoModels": [
         "./dataset/soc_model/model_sdm660.json"
     ],
-    "mergedWorkload": "./dataset/workload/osborn/merged.json",
-    "idleWorkload": "./dataset/workload/osborn/idle.json",
+    "mergedWorkload": "./dataset/workload/osborn/onscreen-merged.json",
+    "idleWorkload": "./dataset/workload/osborn/offscreen-merged.json",
     "gaParameter": {
         "comment": "NSGA3优化算法参数，开启多线程后固定的随机数种子不能带来固定的结果，因为线程访问随机数的顺序不定",
         "population": 1000,
-        "generation_max": 1200,
-        "crossover_fraction": 0.9,
-        "mutation_rate": 0.2,
+        "generationMax": 1500,
+        "crossoverFraction": 0.9,
+        "mutationRate": 0.2,
         "eta": 0.05,
-        "thread_num": 12,
-        "random_seed": 23333
+        "threadNum": 12,
+        "randomSeed": 23333
     },
     "miscSettings": {
-        "comment": "续航评分待机占比2% 续航评分亮屏占比98% 待机续航不低于参考的90% 卡顿比例不超过参考的140%",
-        "powerConsumption.idleFraction": 0.04,
-        "powerConsumption.workFraction": 0.96,
-        "scoreRangeLimit.idleLastingMin": 0.75,
-        "scoreRangeLimit.performanceMax": 1.40
+        "comment": "卡顿评分常规占比10% 卡顿评分渲染掉帧占比90% 大于SOC最大容量90%的负载跳过卡顿判断 卡顿评分使用的分区卡顿计数分区长度为200 亮屏基础功耗500mw 灭屏基础功耗50mw 续航评分待机占比4% 续航评分亮屏占比96% 待机续航不低于参考的90% 卡顿比例不超过参考的140%",
+        "sim.perf.commonFraction": 0.10,
+        "sim.perf.renderFraction": 0.90,
+        "sim.perf.enoughCapacityPct": 90,
+        "sim.perf.partitionLen": 200,
+        "sim.power.workingBase_mw": 500,
+        "sim.power.idleBase_mw": 50,
+        "ga.cost.batteryScore.idleFraction": 0.01,
+        "ga.cost.batteryScore.workFraction": 0.99,
+        "ga.cost.limit.idleLastingMin": 0.90,
+        "ga.cost.limit.performanceMax": 1.40
     },
     "parameterRange": {
         "comment": "interactive, hmp, inputboost 参数优化范围",
