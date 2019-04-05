@@ -20,11 +20,19 @@ public:
         uint8_t  target_loads[TARGET_LOAD_MAX_LEN];
     } Tunables;
 
-    Interactive(Tunables tunables, Cluster *cm);
+    Interactive() = delete;
+    Interactive(Tunables tunables, Cluster *cm)
+        : tunables_(tunables),
+          cluster_(cm),
+          target_freq(cm->model_.max_freq),
+          floor_freq(cm->model_.max_freq),
+          max_freq_hyst_start_time(0),
+          hispeed_validate_time(0),
+          floor_validate_time(0) {}
+
     int InteractiveTimer(int load, int now);
 
 private:
-    Interactive();
     int freq_to_targetload(int freq) const;
     int freq_to_above_hispeed_delay(int freq) const;
     int choose_freq(int freq, int load) const;

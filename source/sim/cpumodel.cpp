@@ -23,7 +23,7 @@ Soc::Soc(const std::string &model_file) {
         m.min_freq   = it["minFreq"];
         m.max_freq   = it["maxFreq"];
         m.opp_model.reserve(it["opp"].size());
-        for (int i = 0; i < it["opp"].size(); ++i) {
+        for (uint32_t i = 0; i < it["opp"].size(); ++i) {
             m.opp_model.push_back({it["opp"][i], it["corePower"][i], it["clusterPower"][i]});
         }
         clusters_.push_back(Cluster(m));

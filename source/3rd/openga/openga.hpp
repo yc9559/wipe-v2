@@ -366,6 +366,7 @@ public:
 		N_threads(std::thread::hardware_concurrency()),
 		user_request_stop(false),
 		idle_delay_us(1000),
+		rnd_seed(seed),
 		calculate_IGA_total_fitness(nullptr),
 		calculate_SO_total_fitness(nullptr),
 		calculate_MO_objectives(nullptr),
@@ -378,8 +379,7 @@ public:
 		SO_report_generation(nullptr),
 		MO_report_generation(nullptr),
 		custom_refresh(nullptr),
-		get_shrink_scale(default_shrink_scale),
-		rnd_seed(seed)
+		get_shrink_scale(default_shrink_scale)
 	{
 		// initialize the random number generator with time-dependent seed
 		std::seed_seq ss{uint32_t(rnd_seed & 0xffffffff), uint32_t(rnd_seed>>32)};

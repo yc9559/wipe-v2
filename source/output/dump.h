@@ -11,7 +11,7 @@
 class Dumper {
 public:
     Dumper() = delete;
-    Dumper(const Soc &soc, const std::string &output_path) : output_path_(output_path), soc_(soc){};
+    Dumper(const Soc &soc, const std::string &output_path) : soc_(soc), output_path_(output_path){};
     void DumpToTXT(const std::vector<OpengaAdapter::Result> &results) const;
     void DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const;
 

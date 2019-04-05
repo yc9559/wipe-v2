@@ -45,8 +45,8 @@ private:
 
 // 从start_idx开始，找到 >=@freq的最低频点对应的opp频点序号
 inline int Cluster::FindIdxWithFreqFloor(int freq, int start_idx) const {
-    int i = start_idx;
-    int uplimit = model_.opp_model.size() - 1;
+    uint32_t i = start_idx;
+    uint32_t uplimit = model_.opp_model.size() - 1;
     // 第1-n个频点，到达第n或者当前频点>=要寻找的即可跳出
     for (; i < uplimit && model_.opp_model[i].freq < freq; ++i)
         ;
@@ -60,7 +60,7 @@ inline int Cluster::freq_floor_to_idx(int freq) const {
 
 // 从设定的最低频开始，找到 <=@freq的最大频点对应的opp频点序号
 inline int Cluster::freq_ceiling_to_idx(int freq) const {
-    int i = min_opp_idx_ + 1;
+    uint32_t i = min_opp_idx_ + 1;
     // 第2-n个频点，到达第n+1或者当前频点>要寻找的即可跳出
     for (; i < model_.opp_model.size() && model_.opp_model[i].freq <= freq; ++i)
         ;

@@ -5,19 +5,9 @@ extern "C" {
 #include <stdbool.h>
 }
 
-Interactive::Interactive(Tunables tunables, Cluster *cm)
-    : cluster_(cm),
-      tunables_(tunables),
-      target_freq(cm->model_.max_freq),
-      floor_freq(cm->model_.max_freq),
-      max_freq_hyst_start_time(0),
-      hispeed_validate_time(0),
-      floor_validate_time(0) {
-}
-
 int Interactive::choose_freq(int freq, int load) const {
-    const uint32_t loadadjfreq = freq * load;
-    uint32_t       prevfreq, freqmin, freqmax, tl;
+    const int loadadjfreq = freq * load;
+    int       prevfreq, freqmin, freqmax, tl;
 
     freqmin = 0;
     freqmax = UINT_MAX;

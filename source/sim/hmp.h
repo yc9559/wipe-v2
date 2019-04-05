@@ -31,8 +31,8 @@ public:
     WaltHmp(){};
     WaltHmp(Cfg cfg);
     int WaltScheduler(int max_load, const int *loads, int n_load, int now);
-    int  CalcPower(const int *loads) const;
-    int  CalcPowerForIdle(const int *loads) const;
+    int CalcPower(const int *loads) const;
+    int CalcPowerForIdle(const int *loads) const;
 
 private:
 #define RavgHistSizeMax 5
@@ -45,8 +45,8 @@ private:
     Interactive *governor_little_;
     Interactive *governor_big_;
     uint64_t     demand_;
-    int          up_demand_thd_;
-    int          down_demand_thd_;
+    uint64_t     up_demand_thd_;
+    uint64_t     down_demand_thd_;
     int          sum_history_[RavgHistSizeMax];
     int          entry_cnt_;
     uint64_t     max_load_sum_;
@@ -79,7 +79,7 @@ inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) c
 // loads: freq * busy_pct * efficiency
 inline int WaltHmp::CalcPower(const int *loads) const {
     const int idle_load_pcts[] = {1, 0, 0, 0};
-    int load_pcts[4];
+    int       load_pcts[4];
     for (int i = 0; i < 4; ++i) {
         load_pcts[i] = loads[i] / active_->model_.efficiency / active_->cur_freq_;
     }

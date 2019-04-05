@@ -66,7 +66,7 @@ void WaltHmp::update_history(int in_demand) {
 
 // demand : freq * busy_pct * efficiency，walt输出
 // load: freq * busy_pct * efficiency
-// load 最大值 2500 * 2048 * 100，sum最大值 2500 * 2048 * 500，可能大于UINT32_MAX
+// load 最大值 2500 * 2048 * 100，sum最大值 3000 * 2048 * 400，可能大于UINT32_MAX
 int WaltHmp::WaltScheduler(int max_load, const int *loads, int n_load, int now) {
     if (entry_cnt_ == tunables_.timer_rate) {
         int max_load_avg = max_load_sum_ / tunables_.timer_rate;

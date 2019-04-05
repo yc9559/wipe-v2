@@ -6,7 +6,7 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
     using namespace std;
     ostringstream buf;
 
-    int idx_cluster = 0;
+    uint32_t idx_cluster = 0;
     for (const auto &g : t.interactive) {
         auto get_freq       = [=](int idx) { return soc_.clusters_[idx_cluster].model_.opp_model[idx].freq; };
         auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
@@ -42,7 +42,7 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
         int min_freq = soc_.clusters_[idx_cluster].model_.min_freq;
         int prev_tg  = -1;
         buf << "target_loads: ";
-        for (int i = 0; i < n_above; ++i) {
+        for (int i = 0; i < n_targetloads; ++i) {
             if (prev_tg == g.target_loads[i]) {
                 continue;
             }

@@ -61,7 +61,6 @@ Workload::Workload(const std::string &workload_file) {
 
         int begin_q   = render_demand[0];
         int end_q     = begin_q + frame_quantum_;
-        int begin_win = begin_q / window_quantum_;
         int idx_rec   = 0;
         int left_q    = begin_q;
         int right_q   = next_win_q(begin_q);
