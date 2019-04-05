@@ -16,17 +16,18 @@
         "randomSeed": 23333
     },
     "miscSettings": {
-        "comment": "卡顿评分常规占比10% 卡顿评分渲染掉帧占比90% 大于SOC最大容量90%的负载跳过卡顿判断 卡顿评分使用的分区卡顿计数分区长度为200 亮屏基础功耗500mw 灭屏基础功耗50mw 续航评分待机占比4% 续航评分亮屏占比96% 待机续航不低于参考的90% 卡顿比例不超过参考的140%",
-        "sim.perf.commonFraction": 0.10,
-        "sim.perf.renderFraction": 0.90,
+        "comment": "卡顿评分常规占比1% 卡顿评分渲染掉帧占比99% 大于SOC最大容量90%的负载跳过卡顿判断 卡顿评分使用的分区卡顿计数分区长度为200 连着卡顿4次认为是连续卡顿 亮屏基础功耗500mw 灭屏基础功耗50mw 续航评分待机占比4% 续航评分亮屏占比96% 待机续航不低于参考的90% 卡顿比例不超过参考的120%",
+        "sim.perf.commonFraction": 0.01,
+        "sim.perf.renderFraction": 0.99,
         "sim.perf.enoughCapacityPct": 90,
         "sim.perf.partitionLen": 200,
+        "sim.perf.seqLagMin": 4,
         "sim.power.workingBase_mw": 500,
         "sim.power.idleBase_mw": 50,
         "ga.cost.batteryScore.idleFraction": 0.01,
         "ga.cost.batteryScore.workFraction": 0.99,
         "ga.cost.limit.idleLastingMin": 0.90,
-        "ga.cost.limit.performanceMax": 1.40
+        "ga.cost.limit.performanceMax": 1.20
     },
     "parameterRange": {
         "comment": "interactive, hmp, inputboost 参数优化范围",

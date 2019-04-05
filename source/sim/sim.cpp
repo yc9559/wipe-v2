@@ -1,5 +1,4 @@
 #include "sim.h"
-#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -62,36 +61,9 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc)
     return ret;
 }
 
-inline double PartitionEval(const std::vector<bool> &lag_seq, int partition_len) {
-    int n_partition = lag_seq.size() / partition_len;
-
-    std::vector<int> period_lag_arr;
-    period_lag_arr.reserve(n_partition);
-
-    int cnt            = 1;
-    int period_lag_cnt = 0;
-    for (const auto &is_lag : lag_seq) {
-        if (cnt == partition_len) {
-            period_lag_arr.push_back(period_lag_cnt);
-            period_lag_cnt = 0;
-            cnt            = 0;
-        }
-        period_lag_cnt += is_lag;
-        ++cnt;
-    }
-
-    int64_t sum = 0;
-    for (const auto &l : period_lag_arr) {
-        sum += l * l;
-    }
-    double l2_regularization = std::sqrt(sum);
-
-    return (l2_regularization / partition_len);
-}
-
 double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log) {
-    const auto &big = soc.clusters_[1].model_;
-    const uint32_t enough_capacity = big.max_freq * big.efficiency * misc_.enough_capacity_pct;
+    const auto &big             = soc.clusters_[1].model_;
+    const int   enough_capacity = big.max_freq * big.efficiency * misc_.enough_capacity_pct;
     auto is_lag = [=](int required, int provided) { return (required < enough_capacity) && (required > provided); };
 
     std::vector<bool> common_lag_seq;
@@ -115,8 +87,8 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
         render_lag_seq.push_back(is_lag(r.frame_load, aggreated_capacity));
     }
 
-    double render_lag_ratio = PartitionEval(render_lag_seq, misc_.partition_len);
-    double common_lag_ratio = PartitionEval(common_lag_seq, misc_.partition_len);
+    double render_lag_ratio = PartitionEval(render_lag_seq);
+    double common_lag_ratio = PartitionEval(common_lag_seq);
 
     double score = misc_.render_fraction * render_lag_ratio + misc_.common_fraction * common_lag_ratio;
 
