@@ -10,7 +10,7 @@ int Interactive::choose_freq(int freq, int load) const {
     int       prevfreq, freqmin, freqmax, tl;
 
     freqmin = 0;
-    freqmax = UINT_MAX;
+    freqmax = INT_MAX;
 
     do {
         prevfreq = freq;
