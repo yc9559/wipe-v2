@@ -56,9 +56,9 @@ public:
     } Tunables;
 
     typedef struct _Score {
-        double performance;
-        double battery_life;
-        double idle_lasting;
+        double                performance;
+        double                battery_life;
+        double                idle_lasting;
         std::vector<uint64_t> ref_power_comsumed;
     } Score;
 
@@ -79,10 +79,10 @@ public:
     Score Run(const Workload &workload, const Workload &idleload, Soc soc, bool is_init);
 
 private:
-    int    QuantifyPower(int power) const;
-    
-    void   AdaptLoad(int *loads, int n_loads, int capacity) const;
-    void   AdaptLoad(int &load, int capacity) const { load = std::min(load, capacity); }
+    int QuantifyPower(int power) const;
+
+    void AdaptLoad(int *loads, int n_loads, int capacity) const;
+    void AdaptLoad(int &load, int capacity) const { load = std::min(load, capacity); }
 
     double PerfPartitionEval(const std::vector<bool> &lag_seq) const;
     double BattPartitionEval(const std::vector<uint32_t> &power_seq) const;

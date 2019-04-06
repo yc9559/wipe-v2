@@ -64,7 +64,7 @@ inline int WaltHmp::LoadToBusyPct(const Cluster *c, uint64_t load) const {
 
 inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const {
     uint64_t aggregated_load = 0;
-    for (int i = 0; i < n_load; ++i) {
+    for (int i = 0; i < active_->model_.core_num; ++i) {
         aggregated_load += loads[i];
     }
     int aggregated_busy_pct = LoadToBusyPct(active_, aggregated_load);
@@ -79,8 +79,8 @@ inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) c
 // loads: freq * busy_pct * efficiency
 inline int WaltHmp::CalcPower(const int *loads) const {
     const int idle_load_pcts[] = {1, 0, 0, 0};
-    int       load_pcts[4];
-    for (int i = 0; i < 4; ++i) {
+    int       load_pcts[NLoadsMax];
+    for (int i = 0; i < NLoadsMax; ++i) {
         load_pcts[i] = loads[i] / (active_->model_.efficiency * active_->cur_freq_);
     }
 
@@ -90,7 +90,7 @@ inline int WaltHmp::CalcPower(const int *loads) const {
     return pwr;
 }
 
-// 不考虑C-state的功耗计算
+// 不考虑C-state的功耗计算，有助于改善待机时负载很低频率太高的问题
 inline int WaltHmp::CalcPowerForIdle(const int *loads) const {
     const int full_load_pcts[] = {99, 99, 99, 99};
     return active_->CalcPower(full_load_pcts);
