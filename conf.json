@@ -1,6 +1,7 @@
 {
     "name": "wipe v2 配置文件",
     "todoModels": [
+        "./dataset/soc_model/model_sd835.json",
         "./dataset/soc_model/model_sd820.json",
         "./dataset/soc_model/model_sdm660.json"
     ],
@@ -23,8 +24,8 @@
         "sim.perf.enoughCapacityPct": 90,
         "sim.perf.partitionLen": 200,
         "sim.perf.seqLagMin": 4,
-        "sim.power.workingBase_mw": 400,
-        "sim.power.idleBase_mw": 40,
+        "sim.power.workingBase_mw": 320,
+        "sim.power.idleBase_mw": 32,
         "sim.power.partitionLen": 2000,
         "ga.cost.batteryScore.idleFraction": 0.01,
         "ga.cost.batteryScore.workFraction": 0.99,
