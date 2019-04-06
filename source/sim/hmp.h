@@ -81,7 +81,7 @@ inline int WaltHmp::CalcPower(const int *loads) const {
     const int idle_load_pcts[] = {1, 0, 0, 0};
     int       load_pcts[4];
     for (int i = 0; i < 4; ++i) {
-        load_pcts[i] = loads[i] / active_->model_.efficiency / active_->cur_freq_;
+        load_pcts[i] = loads[i] / (active_->model_.efficiency * active_->cur_freq_);
     }
 
     int pwr = 0;

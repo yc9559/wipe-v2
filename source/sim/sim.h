@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 #include "cpumodel.h"
 #include "hmp.h"
 #include "interactive.h"
@@ -58,6 +59,7 @@ public:
         double performance;
         double battery_life;
         double idle_lasting;
+        std::vector<uint64_t> ref_power_comsumed;
     } Score;
 
     typedef struct _MiscConst {
@@ -66,28 +68,32 @@ public:
         double common_fraction;
         int    working_base_mw;
         int    idle_base_mw;
-        int    partition_len;
+        int    perf_partition_len;
         int    seq_lag_min;
+        int    batt_partition_len;
     } MiscConst;
 
     Sim() = delete;
     Sim(const Tunables &tunables, const Score &default_score, const MiscConst &misc)
         : tunables_(tunables), misc_(misc), default_score_(default_score){};
-    Score Run(const Workload &workload, const Workload &idleload, Soc soc);
+    Score Run(const Workload &workload, const Workload &idleload, Soc soc, bool is_init);
 
 private:
     int    QuantifyPower(int power) const;
-    double PartitionEval(const std::vector<bool> &lag_seq) const;
+    
     void   AdaptLoad(int *loads, int n_loads, int capacity) const;
     void   AdaptLoad(int &load, int capacity) const { load = std::min(load, capacity); }
 
-    double EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log);
+    double PerfPartitionEval(const std::vector<bool> &lag_seq) const;
+    double BattPartitionEval(const std::vector<uint32_t> &power_seq) const;
 
-    double EvalBatterylife(uint64_t power_comsumed) const {
-        return (1.0 / power_comsumed / default_score_.battery_life);
-    }
+    double EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log);
+    double EvalBatterylife(const std::vector<uint32_t> &power_log) const;
+
+    std::vector<uint64_t> InitRefBattPartition(const std::vector<uint32_t> &power_seq) const;
+
     double EvalIdleLasting(uint64_t idle_power_comsumed) const {
-        return (1.0 / idle_power_comsumed / default_score_.idle_lasting);
+        return (1.0 / (idle_power_comsumed * default_score_.idle_lasting));
     }
 
     Tunables  tunables_;
@@ -103,41 +109,6 @@ inline void Sim::AdaptLoad(int *loads, int n_loads, int capacity) const {
     for (int i = 0; i < n_loads; ++i) {
         loads[i] = std::min(loads[i], capacity);
     }
-}
-
-inline double Sim::PartitionEval(const std::vector<bool> &lag_seq) const {
-    const int partition_len = misc_.partition_len;
-    const int n_partition   = lag_seq.size() / partition_len;
-    const int seq_lag_min   = misc_.seq_lag_min;
-
-    std::vector<int> period_lag_arr;
-    period_lag_arr.reserve(n_partition);
-
-    int  cnt            = 1;
-    int  period_lag_cnt = 0;
-    int  n_recent_lag   = 0;
-    bool is_seq_lag     = false;
-    for (const auto &is_lag : lag_seq) {
-        if (cnt == partition_len) {
-            period_lag_arr.push_back(period_lag_cnt);
-            period_lag_cnt = 0;
-            cnt            = 0;
-        }
-        if (!is_lag) {
-            n_recent_lag = 0;
-        }
-        n_recent_lag += is_lag;
-        is_seq_lag = (n_recent_lag >= seq_lag_min);
-        period_lag_cnt += is_lag + is_seq_lag;
-        ++cnt;
-    }
-
-    int64_t sum = 0;
-    for (const auto &l : period_lag_arr) {
-        sum += l * l;
-    }
-
-    return std::sqrt(sum / n_partition);
 }
 
 #endif

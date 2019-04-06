@@ -43,7 +43,8 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     sim_misc_.common_fraction     = misc["sim.perf.commonFraction"];
     sim_misc_.render_fraction     = misc["sim.perf.renderFraction"];
     sim_misc_.enough_capacity_pct = misc["sim.perf.enoughCapacityPct"];
-    sim_misc_.partition_len       = misc["sim.perf.partitionLen"];
+    sim_misc_.perf_partition_len  = misc["sim.perf.partitionLen"];
+    sim_misc_.batt_partition_len  = misc["sim.power.partitionLen"];
     sim_misc_.seq_lag_min         = misc["sim.perf.seqLagMin"];
     sim_misc_.working_base_mw     = misc["sim.power.workingBase_mw"];
     sim_misc_.idle_base_mw        = misc["sim.power.idleBase_mw"];
@@ -200,7 +201,7 @@ bool OpengaAdapter::EvalParamSeq(const ParamSeq &param_seq, MiddleCost &result) 
     Sim::Tunables t = TranslateParamSeq(param_seq);
 
     Sim        sim(t, default_score_, sim_misc_);
-    Sim::Score score = sim.Run(*workload_, *idleload_, *soc_);
+    Sim::Score score = sim.Run(*workload_, *idleload_, *soc_, false);
 
     result.c1 = score.performance;
     result.c2 = score.battery_life;
@@ -356,7 +357,7 @@ void OpengaAdapter::InitDefaultScore() {
     Sim::Score    s = {1.0, 1.0, 1.0};
 
     Sim sim(t, s, sim_misc_);
-    default_score_ = sim.Run(*workload_, *idleload_, *soc_);
+    default_score_ = sim.Run(*workload_, *idleload_, *soc_, true);
 }
 
 std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
