@@ -54,11 +54,13 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
         quantum_cnt++;
     }
 
+    double complexity = CalcComplexity(little_governor, big_governor) - 1.0;
+
     if (is_init) {
         default_score_.ref_power_comsumed = InitRefBattPartition(power_log);
     }
 
-    double perf         = EvalPerformance(workload, soc, capacity_log);
+    double perf         = EvalPerformance(workload, soc, capacity_log) + misc_.complexity_fraction * complexity;
     double work_lasting = EvalBatterylife(power_log);
     double idle_lasting = EvalIdleLasting(idle_power_comsumed);
 
@@ -191,4 +193,24 @@ std::vector<uint64_t> Sim::InitRefBattPartition(const std::vector<uint32_t> &pow
     }
 
     return period_power_arr;
+}
+
+double Sim::CalcComplexity(const Interactive &little, const Interactive &big) const {
+    const int kAboveMinLen = 10;
+    const int kTargetloadMinLen = 10;
+
+    double clpx[4] = {0.0, 0.0, 0.0, 0.0};
+    int i = 0;
+
+    clpx[i++] = std::max(kAboveMinLen, little.GetAboveHispeedDelayGearNum()) / (double)kAboveMinLen;
+    clpx[i++] = std::max(kTargetloadMinLen, little.GetTargetLoadGearNum()) / (double)kTargetloadMinLen;
+    clpx[i++] = std::max(kAboveMinLen, big.GetAboveHispeedDelayGearNum()) / (double)kAboveMinLen;
+    clpx[i++] = std::max(kTargetloadMinLen, big.GetTargetLoadGearNum()) / (double)kTargetloadMinLen;
+
+    double sum = 0.0;
+    for (const auto &n : clpx) {
+        sum += n * n;
+    }
+
+    return std::sqrt(sum / 4);
 }

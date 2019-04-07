@@ -66,6 +66,7 @@ public:
         double enough_capacity_pct;
         double render_fraction;
         double common_fraction;
+        double complexity_fraction;
         int    working_base_mw;
         int    idle_base_mw;
         int    perf_partition_len;
@@ -79,7 +80,8 @@ public:
     Score Run(const Workload &workload, const Workload &idleload, Soc soc, bool is_init);
 
 private:
-    int QuantifyPower(int power) const;
+    int    QuantifyPower(int power) const;
+    double CalcComplexity(const Interactive &little, const Interactive &big) const;
 
     void AdaptLoad(int *loads, int n_loads, int capacity) const;
     void AdaptLoad(int &load, int capacity) const { load = std::min(load, capacity); }

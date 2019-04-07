@@ -114,3 +114,44 @@ int Interactive::InteractiveTimer(int load, int now) {
 
     return target_freq;
 }
+
+int Interactive::GetAboveHispeedDelayGearNum(void) const {
+    auto get_freq = [=](int idx) { return cluster_->model_.opp_model[idx].freq; };
+
+    const auto &t       = tunables_;
+    const int   n_opp   = cluster_->model_.opp_model.size();
+    const int   n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+
+    int anchor_val = -1;
+    int n_gears    = 0;
+
+    for (int i = 0; i < n_above; ++i) {
+        if (get_freq(i) < t.hispeed_freq) {
+            continue;
+        }
+        if (anchor_val != t.above_hispeed_delay[i]) {
+            anchor_val = t.above_hispeed_delay[i];
+            n_gears++;
+        }
+    }
+
+    return n_gears;
+}
+
+int Interactive::GetTargetLoadGearNum(void) const {
+    const auto &t             = tunables_;
+    const int   n_opp         = cluster_->model_.opp_model.size();
+    const int   n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+
+    int anchor_val = -1;
+    int n_gears    = 0;
+
+    for (int i = 0; i < n_targetloads; ++i) {
+        if (anchor_val != t.target_loads[i]) {
+            anchor_val = t.target_loads[i];
+            n_gears++;
+        }
+    }
+
+    return n_gears;
+}

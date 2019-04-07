@@ -31,6 +31,8 @@ public:
           floor_validate_time(0) {}
 
     int InteractiveTimer(int load, int now);
+    int GetAboveHispeedDelayGearNum(void) const;
+    int GetTargetLoadGearNum(void) const;
 
 private:
     int freq_to_targetload(int freq) const;

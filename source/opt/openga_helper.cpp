@@ -48,6 +48,7 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     sim_misc_.seq_lag_min         = misc["sim.perf.seqLagMin"];
     sim_misc_.working_base_mw     = misc["sim.power.workingBase_mw"];
     sim_misc_.idle_base_mw        = misc["sim.power.idleBase_mw"];
+    sim_misc_.complexity_fraction = misc["sim.complexityFraction"];
 
     // 解析参数搜索空间范围
     ParamDescCfg param_desc_cfg;
