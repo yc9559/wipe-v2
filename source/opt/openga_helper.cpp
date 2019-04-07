@@ -385,7 +385,8 @@ std::vector<OpengaAdapter::Result> OpengaAdapter::Optimize(void) {
     ga_obj.idle_delay_us           = 1;  // switch between threads quickly
 
     if (ga_cfg_.thread_num > 1) {
-        ga_obj.multi_threading = true;
+        ga_obj.multi_threading   = true;
+        ga_obj.dynamic_threading = true;
     }
 
     std::cout << "\nTarget: " << soc_->name_ << std::endl;
