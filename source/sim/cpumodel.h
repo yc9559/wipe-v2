@@ -92,8 +92,9 @@ inline void Cluster::SetCurfreq(int freq) {
     return;
 }
 
+// 耗电量 = 功耗(mw) * 占用率(最大100)
 inline int Cluster::CalcPower(const int *load_pcts) const {
-    int pwr      = model_.opp_model[cur_opp_idx_].cluster_power;
+    int pwr      = model_.opp_model[cur_opp_idx_].cluster_power * 100;
     int core_pwr = model_.opp_model[cur_opp_idx_].core_power;
     for (int i = 0; i < model_.core_num; ++i) {
         pwr += core_pwr * load_pcts[i];

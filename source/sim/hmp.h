@@ -90,10 +90,22 @@ inline int WaltHmp::CalcPower(const int *loads) const {
     return pwr;
 }
 
-// 不考虑C-state的功耗计算，有助于改善待机时负载很低频率太高的问题
+// 如果负载没有被移动到大核，则认为大核没有闲置耗电，减少待机时大核上线概率
 inline int WaltHmp::CalcPowerForIdle(const int *loads) const {
-    const int full_load_pcts[] = {99, 99, 99, 99};
-    return active_->CalcPower(full_load_pcts);
+    const int idle_load_pcts[] = {1, 0, 0, 0};
+    int       load_pcts[NLoadsMax];
+    for (int i = 0; i < NLoadsMax; ++i) {
+        load_pcts[i] = loads[i] / (active_->model_.efficiency * active_->cur_freq_);
+    }
+
+    int pwr = 0;
+    if (active_ == little_) {
+        pwr += little_->CalcPower(load_pcts);
+    } else {
+        pwr += little_->CalcPower(idle_load_pcts);
+        pwr += big_->CalcPower(load_pcts);
+    }
+    return pwr;
 }
 
 #endif
