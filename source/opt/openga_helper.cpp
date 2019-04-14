@@ -275,6 +275,23 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
     }
     t.input.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
 
+    idx = 0;
+    for (const auto &cluster : soc_->clusters_) {
+        auto & tunable       = t.interactive[idx];
+        double timer_quantum = t.sched.timer_rate;
+
+        tunable.min_sample_time     = std::min(1.0, std::round(tunable.min_sample_time / timer_quantum));
+        tunable.max_freq_hysteresis = std::min(1.0, std::round(tunable.max_freq_hysteresis / timer_quantum));
+
+        int n_opp   = cluster.model_.opp_model.size();
+        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+
+        for (int i = 0; i < n_above; ++i) {
+            tunable.above_hispeed_delay[i] = std::min(1.0, std::round(tunable.above_hispeed_delay[i] / timer_quantum));
+        }
+        idx++;
+    }
+
     return t;
 }
 

@@ -18,7 +18,7 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
         buf << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
 
         int n_opp         = soc_.clusters_[idx_cluster].model_.opp_model.size();
-        int n_above       = min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_above       = min(ABOVE_DELAY_MAX_LEN, n_opp) - 1;    // 最高频的above_delay并没有用
         int n_targetloads = min(TARGET_LOAD_MAX_LEN, n_opp);
 
         int prev_above = -1;
