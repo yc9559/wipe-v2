@@ -45,7 +45,9 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     sim_misc_.enough_capacity_pct = misc["sim.perf.enoughCapacityPct"];
     sim_misc_.perf_partition_len  = misc["sim.perf.partitionLen"];
     sim_misc_.batt_partition_len  = misc["sim.power.partitionLen"];
-    sim_misc_.seq_lag_min         = misc["sim.perf.seqLagMin"];
+    sim_misc_.seq_lag_l1          = misc["sim.perf.seqLagL1"];
+    sim_misc_.seq_lag_l2          = misc["sim.perf.seqLagL2"];
+    sim_misc_.seq_lag_max         = misc["sim.perf.seqLagMax"];
     sim_misc_.working_base_mw     = misc["sim.power.workingBase_mw"];
     sim_misc_.idle_base_mw        = misc["sim.power.idleBase_mw"];
     sim_misc_.complexity_fraction = misc["sim.complexityFraction"];

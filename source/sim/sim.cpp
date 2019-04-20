@@ -108,15 +108,16 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
 double Sim::PerfPartitionEval(const std::vector<bool> &lag_seq) const {
     const int partition_len = misc_.perf_partition_len;
     const int n_partition   = lag_seq.size() / partition_len;
-    const int seq_lag_min   = misc_.seq_lag_min;
+    const int seq_lag_l1    = misc_.seq_lag_l1;
+    const int seq_lag_l2    = misc_.seq_lag_l2;
+    const int seq_lag_max   = misc_.seq_lag_max;
 
     std::vector<int> period_lag_arr;
     period_lag_arr.reserve(n_partition);
 
-    int  cnt            = 1;
-    int  period_lag_cnt = 0;
-    int  n_recent_lag   = 0;
-    bool is_seq_lag     = false;
+    int cnt            = 1;
+    int period_lag_cnt = 0;
+    int n_recent_lag   = 0;
     for (const auto &is_lag : lag_seq) {
         if (cnt == partition_len) {
             period_lag_arr.push_back(period_lag_cnt);
@@ -124,11 +125,11 @@ double Sim::PerfPartitionEval(const std::vector<bool> &lag_seq) const {
             cnt            = 0;
         }
         if (!is_lag) {
-            n_recent_lag = 0;
+            n_recent_lag = n_recent_lag >> 1;
         }
-        n_recent_lag += is_lag;
-        is_seq_lag = (n_recent_lag >= seq_lag_min);
-        period_lag_cnt += is_lag + is_seq_lag;
+        n_recent_lag = std::min(seq_lag_max, n_recent_lag + is_lag);
+        period_lag_cnt += (n_recent_lag >= seq_lag_l1);
+        period_lag_cnt += (n_recent_lag >= seq_lag_l2);
         ++cnt;
     }
 
@@ -196,11 +197,11 @@ std::vector<uint64_t> Sim::InitRefBattPartition(const std::vector<uint32_t> &pow
 }
 
 double Sim::CalcComplexity(const Interactive &little, const Interactive &big) const {
-    const int kAboveMinLen = 10;
+    const int kAboveMinLen      = 10;
     const int kTargetloadMinLen = 10;
 
     double clpx[4] = {0.0, 0.0, 0.0, 0.0};
-    int i = 0;
+    int    i       = 0;
 
     clpx[i++] = std::max(kAboveMinLen, little.GetAboveHispeedDelayGearNum()) / (double)kAboveMinLen;
     clpx[i++] = std::max(kTargetloadMinLen, little.GetTargetLoadGearNum()) / (double)kTargetloadMinLen;

@@ -70,7 +70,9 @@ public:
         int    working_base_mw;
         int    idle_base_mw;
         int    perf_partition_len;
-        int    seq_lag_min;
+        int    seq_lag_l1;
+        int    seq_lag_l2;
+        int    seq_lag_max;
         int    batt_partition_len;
     } MiscConst;
 
