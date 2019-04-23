@@ -1,0 +1,64 @@
+{
+    "name": "sdm636",
+    "device": "坚果 Pro 2 模拟",
+    "cluster": [
+        {
+            "coreNum": 4,
+            "efficiency": 1024,
+            "minFreq": 633,
+            "maxFreq": 1612,
+            "opp": [
+                633,
+                902,
+                1113,
+                1401,
+                1536,
+                1612
+            ],
+            "corePower": [
+                44,
+                56,
+                76,
+                108,
+                148,
+                160
+            ],
+            "clusterPower": [
+                11,
+                14,
+                19,
+                27,
+                37,
+                40
+            ],
+            "author": "yc9559@酷安",
+            "comment": "sdm660 线性回归"
+        },
+        {
+            "coreNum": 4,
+            "efficiency": 1638,
+            "minFreq": 1113,
+            "maxFreq": 1804,
+            "opp": [
+                1113,
+                1401,
+                1747,
+                1804
+            ],
+            "corePower": [
+                340,
+                464,
+                688,
+                760
+            ],
+            "clusterPower": [
+                85,
+                116,
+                172,
+                190
+            ],
+            "author": "yc9559@酷安",
+            "comment": "sdm660 线性回归"
+        }
+    ]
+}

@@ -3,7 +3,14 @@
     "todoModels": [
         "./dataset/soc_model/model_sdm660.json",
         "./dataset/soc_model/model_sd820.json",
-        "./dataset/soc_model/model_sd835.json"
+        "./dataset/soc_model/model_sd835.json",
+        "./dataset/soc_model/model_sd821_v1.json",
+        "./dataset/soc_model/model_sd821_v2.json",
+        "./dataset/soc_model/model_sd821_v3.json",
+        "./dataset/soc_model/model_sdm625.json",
+        "./dataset/soc_model/model_sdm626.json",
+        "./dataset/soc_model/model_sdm636.json",
+        "./dataset/soc_model/model_sd652_650_653.json"
     ],
     "mergedWorkload": "./dataset/workload/osborn/onscreen-merged.json",
     "idleWorkload": "./dataset/workload/osborn/offscreen-merged.json",
@@ -66,8 +73,8 @@
             "max": 99
         },
         "sched_freq_aggregate_threshold_pct": {
-            "min": 400,
-            "max": 400
+            "min": 500,
+            "max": 500
         },
         "sched_ravg_hist_size": {
             "min": 3,
