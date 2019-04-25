@@ -1,6 +1,7 @@
 {
     "name": "sdm660",
     "device": "坚果 Pro 2",
+    "enoughCapacityPct": 79,
     "cluster": [
         {
             "coreNum": 4,

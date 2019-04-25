@@ -1,6 +1,7 @@
 {
     "name": "sdm626",
     "device": "模拟",
+    "enoughCapacityPct": 80,
     "cluster": [
         {
             "coreNum": 4,

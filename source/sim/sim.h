@@ -63,7 +63,6 @@ public:
     } Score;
 
     typedef struct _MiscConst {
-        double enough_capacity_pct;
         double render_fraction;
         double common_fraction;
         double complexity_fraction;

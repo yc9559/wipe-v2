@@ -14,16 +14,16 @@ public:
     } Pwr;
 
     typedef struct _ClusterModel {
-        int  min_freq;
-        int  max_freq;
-        int  efficiency;
-        int  core_num;
+        int              min_freq;
+        int              max_freq;
+        int              efficiency;
+        int              core_num;
         std::vector<Pwr> opp_model;
-        int  is_asmp;
+        int              is_asmp;
     } Model;
 
     Cluster(Model model);
-    int FindIdxWithFreqFloor(int freq, int start_idx) const;
+    int  FindIdxWithFreqFloor(int freq, int start_idx) const;
     int  freq_floor_to_idx(int freq) const;
     int  freq_ceiling_to_idx(int freq) const;
     int  freq_floor_to_opp(int freq) const;
@@ -45,7 +45,7 @@ private:
 
 // 从start_idx开始，找到 >=@freq的最低频点对应的opp频点序号
 inline int Cluster::FindIdxWithFreqFloor(int freq, int start_idx) const {
-    uint32_t i = start_idx;
+    uint32_t i       = start_idx;
     uint32_t uplimit = model_.opp_model.size() - 1;
     // 第1-n个频点，到达第n或者当前频点>=要寻找的即可跳出
     for (; i < uplimit && model_.opp_model[i].freq < freq; ++i)
@@ -109,12 +109,16 @@ inline int Cluster::CalcCapacity() const {
 class Soc {
 public:
     Soc(const std::string &model_file);
-    ~Soc();
+    ~Soc() {};
+    int GetEnoughCapacity(void) const;
+
     std::string          name_;
     std::vector<Cluster> clusters_;
 
 private:
     Soc();
+
+    int enough_capacity_pct_; // 提供的容量大于SOC最大容量xx%的跳过卡顿判断
 };
 
 #endif

@@ -1,6 +1,7 @@
 {
     "name": "sd652_650_653",
     "device": "模拟",
+    "enoughCapacityPct": 87,
     "cluster": [
         {
             "coreNum": 4,

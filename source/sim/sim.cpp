@@ -73,7 +73,7 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
 
 double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log) {
     const auto &big             = soc.clusters_[1].model_;
-    const int   enough_capacity = big.max_freq * big.efficiency * misc_.enough_capacity_pct;
+    const int   enough_capacity = soc.GetEnoughCapacity();
     auto is_lag = [=](int required, int provided) { return (provided < required) && (provided < enough_capacity); };
 
     std::vector<bool> common_lag_seq;

@@ -1,6 +1,7 @@
 {
     "name": "sdm625",
     "device": "模拟",
+    "enoughCapacityPct": 89,
     "cluster": [
         {
             "coreNum": 4,

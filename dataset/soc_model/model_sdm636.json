@@ -1,6 +1,7 @@
 {
     "name": "sdm636",
     "device": "坚果 Pro 2 模拟",
+    "enoughCapacityPct": 95,
     "cluster": [
         {
             "coreNum": 4,

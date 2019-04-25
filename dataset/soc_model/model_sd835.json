@@ -1,6 +1,7 @@
 {
     "name": "sd835",
     "device": "小米6 模拟",
+    "enoughCapacityPct": 79,
     "cluster": [
         {
             "coreNum": 4,
