@@ -2,42 +2,9 @@
     "name": "sdm625",
     "device": "模拟",
     "enoughCapacityPct": 89,
+    "sched": "walt",
+    "intra": "smp",
     "cluster": [
-        {
-            "coreNum": 4,
-            "efficiency": 1024,
-            "minFreq": 652,
-            "maxFreq": 2016,
-            "opp": [
-                652,
-                1036,
-                1401,
-                1689,
-                1804,
-                1958,
-                2016
-            ],
-            "corePower": [
-                44,
-                68,
-                108,
-                176,
-                208,
-                256,
-                280
-            ],
-            "clusterPower": [
-                11,
-                17,
-                27,
-                44,
-                52,
-                64,
-                70
-            ],
-            "author": "yc9559@酷安",
-            "comment": "sdm660 线性回归"
-        },
         {
             "coreNum": 4,
             "efficiency": 1024,

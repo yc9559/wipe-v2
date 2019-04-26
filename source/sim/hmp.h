@@ -52,6 +52,7 @@ private:
     uint64_t     max_load_sum_;
     uint64_t     loads_sum_[NLoadsMax];
     int          governor_cnt_;
+    int          cluster_num_;
 
     int  LoadToBusyPct(const Cluster *c, uint64_t load) const;
     void update_history(int in_demand);
@@ -93,7 +94,7 @@ inline int WaltHmp::CalcPower(const int *loads) const {
 // 如果负载没有被移动到大核，则认为大核没有闲置耗电，减少待机时大核上线概率
 inline int WaltHmp::CalcPowerForIdle(const int *loads) const {
     const int idle_load_pcts[] = {100, 0, 0, 0};
-    int pwr = 0;
+    int       pwr              = 0;
     if (active_ == little_) {
         pwr += little_->CalcPower(idle_load_pcts);
     } else {

@@ -19,7 +19,6 @@ public:
         int              efficiency;
         int              core_num;
         std::vector<Pwr> opp_model;
-        int              is_asmp;
     } Model;
 
     Cluster(Model model);
@@ -108,8 +107,13 @@ inline int Cluster::CalcCapacity() const {
 
 class Soc {
 public:
+    // 多核心模式
+    typedef enum _IntraType { kSMP = 0, kASMP } IntraType;
+    // 使用的调度器类型
+    typedef enum _SchedType { kLegacy = 0, kWalt, kPelt } SchedType;
+
     Soc(const std::string &model_file);
-    ~Soc() {};
+    ~Soc(){};
     int GetEnoughCapacity(void) const;
 
     std::string          name_;
@@ -118,7 +122,9 @@ public:
 private:
     Soc();
 
-    int enough_capacity_pct_; // 提供的容量大于SOC最大容量xx%的跳过卡顿判断
+    IntraType intra_type_;
+    SchedType sched_type_;
+    int       enough_capacity_pct_;  // 提供的容量大于SOC最大容量xx%的跳过卡顿判断
 };
 
 #endif

@@ -2,6 +2,8 @@
     "name": "sdm660",
     "device": "坚果 Pro 2",
     "enoughCapacityPct": 79,
+    "sched": "walt",
+    "intra": "smp",
     "cluster": [
         {
             "coreNum": 4,

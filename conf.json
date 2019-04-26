@@ -10,7 +10,8 @@
         "./dataset/soc_model/model_sdm625.json",
         "./dataset/soc_model/model_sdm626.json",
         "./dataset/soc_model/model_sdm636.json",
-        "./dataset/soc_model/model_sd652_650_653.json"
+        "./dataset/soc_model/model_sd652_650.json",
+        "./dataset/soc_model/model_sd653.json"
     ],
     "mergedWorkload": "./dataset/workload/osborn/onscreen-merged.json",
     "idleWorkload": "./dataset/workload/osborn/offscreen-merged.json",
@@ -26,8 +27,8 @@
     },
     "miscSettings": {
         "comment": "卡顿评分常规占比0% 卡顿评分渲染掉帧占比100% 卡顿评分使用的分区卡顿计数分区长度为1000 连着卡顿2次认为是连续卡顿 连着卡顿4次认为是严重连续卡顿 连着卡顿至多2次 亮屏基础功耗300mw 灭屏基础功耗30mw interactive参数复杂度在性能占比4% 续航评分使用的分区耗电计数分区长度为2000 续航评分待机占比0% 续航评分亮屏占比100% 待机续航不低于参考的100% 卡顿比例不超过参考的120%",
-        "sim.perf.commonFraction": 0.00,
-        "sim.perf.renderFraction": 1.00,
+        "sim.perf.commonFraction": 0.01,
+        "sim.perf.renderFraction": 0.99,
         "sim.perf.partitionLen": 1000,
         "sim.perf.seqLagL1": 2,
         "sim.perf.seqLagL2": 4,
@@ -36,8 +37,8 @@
         "sim.power.idleBase_mw": 30,
         "sim.power.partitionLen": 2000,
         "sim.complexityFraction": 0.02,
-        "ga.cost.batteryScore.idleFraction": 0.00,
-        "ga.cost.batteryScore.workFraction": 1.00,
+        "ga.cost.batteryScore.idleFraction": 0.01,
+        "ga.cost.batteryScore.workFraction": 0.99,
         "ga.cost.limit.idleLastingMin": 1.00,
         "ga.cost.limit.performanceMax": 1.20
     },

@@ -1,11 +1,12 @@
 #include "openga_helper.h"
 #include <algorithm>
-#include <functional>
 #include <fstream>
-#include "json.hpp"
+#include <functional>
 #include "interactive.h"
+#include "json.hpp"
 
-OpengaAdapter::OpengaAdapter(Soc *soc, const Workload *workload, const Workload *idleload, const std::string &ga_cfg_file)
+OpengaAdapter::OpengaAdapter(Soc *soc, const Workload *workload, const Workload *idleload,
+                             const std::string &ga_cfg_file)
     : soc_(soc), workload_(workload), idleload_(idleload) {
     ParseCfgFile(ga_cfg_file);
     InitDefaultScore();
@@ -24,7 +25,7 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     }
 
     // 解析NSGA3相关参数
-    auto p = j["gaParameter"];
+    auto p                     = j["gaParameter"];
     ga_cfg_.population         = p["population"];
     ga_cfg_.generation_max     = p["generationMax"];
     ga_cfg_.crossover_fraction = p["crossoverFraction"];
@@ -34,7 +35,7 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     ga_cfg_.random_seed        = p["randomSeed"];
 
     // 解析结果的分数限制和可调占比
-    auto misc = j["miscSettings"];
+    auto misc              = j["miscSettings"];
     misc_.idle_fraction    = misc["ga.cost.batteryScore.idleFraction"];
     misc_.work_fraction    = misc["ga.cost.batteryScore.workFraction"];
     misc_.idle_lasting_min = misc["ga.cost.limit.idleLastingMin"];
@@ -52,46 +53,29 @@ void OpengaAdapter::ParseCfgFile(const std::string &ga_cfg_file) {
     sim_misc_.complexity_fraction = misc["sim.complexityFraction"];
 
     // 解析参数搜索空间范围
-    ParamDescCfg param_desc_cfg;
-    auto range = j["parameterRange"];
+    ParamDescCfg desc_cfg;
 
-    auto t = range["above_hispeed_delay"];
-    param_desc_cfg.above_hispeed_delay = {t["min"], t["max"]};
+    auto get_range = [j](const std::string &key) {
+        ParamDescElement el;
+        el.range_start = j["parameterRange"][key]["min"];
+        el.range_end   = j["parameterRange"][key]["max"];
+        return el;
+    };
 
-    t = range["go_hispeed_load"];
-    param_desc_cfg.go_hispeed_load = {t["min"], t["max"]};
+    desc_cfg.above_hispeed_delay                = get_range("above_hispeed_delay");
+    desc_cfg.go_hispeed_load                    = get_range("go_hispeed_load");
+    desc_cfg.max_freq_hysteresis                = get_range("max_freq_hysteresis");
+    desc_cfg.min_sample_time                    = get_range("min_sample_time");
+    desc_cfg.target_loads                       = get_range("target_loads");
+    desc_cfg.sched_downmigrate                  = get_range("sched_downmigrate");
+    desc_cfg.sched_upmigrate                    = get_range("sched_upmigrate");
+    desc_cfg.sched_freq_aggregate_threshold_pct = get_range("sched_freq_aggregate_threshold_pct");
+    desc_cfg.sched_ravg_hist_size               = get_range("sched_ravg_hist_size");
+    desc_cfg.sched_window_stats_policy          = get_range("sched_window_stats_policy");
+    desc_cfg.timer_rate                         = get_range("timer_rate");
+    desc_cfg.input_duration                     = get_range("input_duration");
 
-    t = range["max_freq_hysteresis"];
-    param_desc_cfg.max_freq_hysteresis = {t["min"], t["max"]};
-
-    t = range["min_sample_time"];
-    param_desc_cfg.min_sample_time = {t["min"], t["max"]};
-
-    t = range["target_loads"];
-    param_desc_cfg.target_loads = {t["min"], t["max"]};
-
-    t = range["sched_downmigrate"];
-    param_desc_cfg.sched_downmigrate = {t["min"], t["max"]};
-
-    t = range["sched_upmigrate"];
-    param_desc_cfg.sched_upmigrate = {t["min"], t["max"]};
-
-    t = range["sched_freq_aggregate_threshold_pct"];
-    param_desc_cfg.sched_freq_aggregate_threshold_pct = {t["min"], t["max"]};
-
-    t = range["sched_ravg_hist_size"];
-    param_desc_cfg.sched_ravg_hist_size = {t["min"], t["max"]};
-
-    t = range["sched_window_stats_policy"];
-    param_desc_cfg.sched_window_stats_policy = {t["min"], t["max"]};
-
-    t = range["timer_rate"];
-    param_desc_cfg.timer_rate = {t["min"], t["max"]};
-
-    t = range["input_duration"];
-    param_desc_cfg.input_duration = {t["min"], t["max"]};
-
-    InitParamDesc(param_desc_cfg);
+    InitParamDesc(desc_cfg);
 }
 
 void OpengaAdapter::InitParamSeq(ParamSeq &p, const RandomFunc &rnd01) {
@@ -248,8 +232,8 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
         t.interactive[idx].min_sample_time     = Quantify(*it_seq++, *it_desc++);
         t.interactive[idx].max_freq_hysteresis = Quantify(*it_seq++, *it_desc++);
 
-        int n_opp = cluster.model_.opp_model.size();
-        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_opp         = cluster.model_.opp_model.size();
+        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
         int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
 
         for (int i = 0; i < n_above; ++i) {
@@ -260,6 +244,7 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
         }
         idx++;
     }
+
     // WALT HMP 调速器参数上下限
     t.sched.sched_downmigrate                  = QuatLoadParam(*it_seq++, *it_desc++);
     t.sched.sched_upmigrate                    = QuatLoadParam(*it_seq++, *it_desc++);
@@ -268,6 +253,7 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
     t.sched.sched_ravg_hist_size               = Quantify(*it_seq++, *it_desc++);
     t.sched.sched_window_stats_policy          = Quantify(*it_seq++, *it_desc++);
     t.sched.timer_rate                         = Quantify(*it_seq++, *it_desc++);
+
     // 输入升频参数上下限
     idx = 0;
     for (const auto &cluster : soc_->clusters_) {
@@ -276,6 +262,7 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
     }
     t.input.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
 
+    // 时长类参数取整到一个timer_rate
     idx = 0;
     for (const auto &cluster : soc_->clusters_) {
         auto & tunable       = t.interactive[idx];
@@ -293,6 +280,11 @@ Sim::Tunables OpengaAdapter::TranslateParamSeq(const ParamSeq &p) const {
         idx++;
     }
 
+    // 平衡的双集群HMP，如sd625，负载迁移阈值使用45/45
+    if (soc_->clusters_.size() < 2) {
+        t.sched.sched_downmigrate = 45;
+        t.sched.sched_upmigrate   = 45;
+    }
     return t;
 }
 
@@ -305,10 +297,10 @@ void OpengaAdapter::InitParamDesc(const ParamDescCfg &p) {
         param_desc_.push_back(p.min_sample_time);
         param_desc_.push_back(p.max_freq_hysteresis);
 
-        int n_opp = cluster.model_.opp_model.size();
-        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_opp         = cluster.model_.opp_model.size();
+        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
         int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-        
+
         for (int i = 0; i < n_above; ++i) {
             param_desc_.push_back(p.above_hispeed_delay);
         }
@@ -316,6 +308,7 @@ void OpengaAdapter::InitParamDesc(const ParamDescCfg &p) {
             param_desc_.push_back(p.target_loads);
         }
     }
+
     // WALT HMP 调速器参数上下限
     param_desc_.push_back(p.sched_downmigrate);
     param_desc_.push_back(p.sched_upmigrate);
@@ -323,6 +316,7 @@ void OpengaAdapter::InitParamDesc(const ParamDescCfg &p) {
     param_desc_.push_back(p.sched_ravg_hist_size);
     param_desc_.push_back(p.sched_window_stats_policy);
     param_desc_.push_back(p.timer_rate);
+
     // 输入升频参数上下限
     for (const auto &cluster : soc_->clusters_) {
         ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
@@ -334,6 +328,7 @@ void OpengaAdapter::InitParamDesc(const ParamDescCfg &p) {
 
 Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
     Sim::Tunables t;
+
     // interactive 调速器参数上下限
     int idx = 0;
     for (const auto &cluster : soc_->clusters_) {
@@ -342,10 +337,10 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
         t.interactive[idx].min_sample_time     = 2;
         t.interactive[idx].max_freq_hysteresis = 2;
 
-        int n_opp = cluster.model_.opp_model.size();
-        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_opp         = cluster.model_.opp_model.size();
+        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
         int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-        
+
         for (int i = 0; i < n_above; ++i) {
             t.interactive[idx].above_hispeed_delay[i] = 1;
         }
@@ -354,6 +349,7 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
         }
         idx++;
     }
+
     // WALT HMP 调速器参数上下限
     t.sched.sched_downmigrate                  = 85;
     t.sched.sched_upmigrate                    = 95;
@@ -361,6 +357,7 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
     t.sched.sched_ravg_hist_size               = 5;
     t.sched.sched_window_stats_policy          = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
     t.sched.timer_rate                         = 2;
+
     // 输入升频参数上下限
     idx = 0;
     for (const auto &cluster : soc_->clusters_) {

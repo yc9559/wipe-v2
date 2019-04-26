@@ -19,6 +19,7 @@ WaltHmp::WaltHmp(Cfg cfg)
     down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
     memset(sum_history_, 0, sizeof(sum_history_));
     memset(loads_sum_, 0, sizeof(loads_sum_));
+    cluster_num_ = (big_ == little_) ? 1 : 2;
 }
 
 // 更新负载滑动窗口，返回预计的负载需求，@in_demand为freq*busy_pct*efficiency
@@ -81,12 +82,12 @@ int WaltHmp::WaltScheduler(int max_load, const int *loads, int n_load, int now) 
             loads_avg[i] = loads_sum_[i] / tunables_.timer_rate;
         }
 
-        entry_cnt_ = 0;
+        entry_cnt_    = 0;
         max_load_sum_ = 0;
         memset(loads_sum_, 0, sizeof(loads_sum_));
 
         update_history(max_load_avg);
-        
+
         if (demand_ > up_demand_thd_) {
             active_ = big_;
             idle_   = little_;
@@ -97,11 +98,12 @@ int WaltHmp::WaltScheduler(int max_load, const int *loads, int n_load, int now) 
             ;
         }
 
-        active_->busy_pct_ = AggregateLoadToBusyPctIfNeed(loads_avg, n_load);
         idle_->busy_pct_   = 0;
+        active_->busy_pct_ = AggregateLoadToBusyPctIfNeed(loads_avg, n_load);
 
         little_->SetCurfreq(governor_little_->InteractiveTimer(little_->busy_pct_, governor_cnt_));
-        big_->SetCurfreq(governor_big_->InteractiveTimer(big_->busy_pct_, governor_cnt_));
+        if (cluster_num_ > 1)
+            big_->SetCurfreq(governor_big_->InteractiveTimer(big_->busy_pct_, governor_cnt_));
 
         ++governor_cnt_;
     }

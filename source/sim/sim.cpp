@@ -6,14 +6,16 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
     const int base_pwr      = QuantifyPower(misc_.working_base_mw * 100);
     const int idle_base_pwr = QuantifyPower(misc_.idle_base_mw * 100);
 
-    Interactive little_governor(tunables_.interactive[0], &soc.clusters_[0]);
-    Interactive big_governor(tunables_.interactive[1], &soc.clusters_[1]);
-    InputBoost  input(tunables_.input);
+    int cl_big_idx = soc.clusters_.size() - 1;
+
+    auto little_governor = Interactive(tunables_.interactive[0], &soc.clusters_[0]);
+    auto big_governor    = Interactive(tunables_.interactive[cl_big_idx], &soc.clusters_[cl_big_idx]);
+    auto input           = InputBoost(tunables_.input);
 
     WaltHmp::Cfg waltcfg;
     waltcfg.tunables        = tunables_.sched;
     waltcfg.little          = &soc.clusters_[0];
-    waltcfg.big             = &soc.clusters_[1];
+    waltcfg.big             = &soc.clusters_[cl_big_idx];
     waltcfg.governor_little = &little_governor;
     waltcfg.governor_big    = &big_governor;
     WaltHmp hmp(waltcfg);
@@ -72,8 +74,7 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
 }
 
 double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std::vector<uint32_t> &capacity_log) {
-    const auto &big             = soc.clusters_[1].model_;
-    const int   enough_capacity = soc.GetEnoughCapacity();
+    const int enough_capacity = soc.GetEnoughCapacity();
     auto is_lag = [=](int required, int provided) { return (provided < required) && (provided < enough_capacity); };
 
     std::vector<bool> common_lag_seq;

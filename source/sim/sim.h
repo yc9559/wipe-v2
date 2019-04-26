@@ -21,17 +21,18 @@ public:
     InputBoost(const Tunables &tunables) : tunables_(tunables), input_happened_quantum_(0), is_in_boost_(false) {}
 
     void HandleInput(Soc &soc, int has_input, int cur_quantum) {
+        int cluster_num = soc.clusters_.size();
         if (has_input && tunables_.duration_quantum) {
-            soc.clusters_[0].SetMinfreq(tunables_.boost_freq[0]);
-            soc.clusters_[1].SetMinfreq(tunables_.boost_freq[1]);
+            for (int i = 0; i < cluster_num; ++i)
+                soc.clusters_[i].SetMinfreq(tunables_.boost_freq[i]);
             input_happened_quantum_ = cur_quantum;
             is_in_boost_            = true;
             return;
         }
 
         if (is_in_boost_ && cur_quantum - input_happened_quantum_ > tunables_.duration_quantum) {
-            soc.clusters_[0].SetMinfreq(soc.clusters_[0].model_.min_freq);
-            soc.clusters_[1].SetMinfreq(soc.clusters_[1].model_.min_freq);
+            for (int i = 0; i < cluster_num; ++i)
+                soc.clusters_[i].SetMinfreq(soc.clusters_[i].model_.min_freq);
             is_in_boost_ = false;
         }
         return;

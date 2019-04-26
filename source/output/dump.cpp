@@ -1,13 +1,16 @@
 #include "dump.h"
-#include <sstream>
 #include <fstream>
+#include <sstream>
 
 std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
     using namespace std;
     ostringstream buf;
 
-    uint32_t idx_cluster = 0;
-    for (const auto &g : t.interactive) {
+    int cluster_num = soc_.clusters_.size();
+
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        const auto &g = t.interactive[idx_cluster];
+
         auto get_freq       = [=](int idx) { return soc_.clusters_[idx_cluster].model_.opp_model[idx].freq; };
         auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
 
@@ -18,7 +21,7 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
         buf << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
 
         int n_opp         = soc_.clusters_[idx_cluster].model_.opp_model.size();
-        int n_above       = min(ABOVE_DELAY_MAX_LEN, n_opp) - 1;    // 最高频的above_delay并没有用
+        int n_above       = min(ABOVE_DELAY_MAX_LEN, n_opp) - 1;  // 最高频的above_delay并没有用
         int n_targetloads = min(TARGET_LOAD_MAX_LEN, n_opp);
 
         int prev_above = -1;
@@ -57,7 +60,6 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
             }
         }
         buf << endl << endl;
-        idx_cluster++;
     }
 
     buf << "[hmp sched]" << endl << endl;
@@ -70,7 +72,7 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
     buf << endl;
 
     buf << "[input boost]" << endl << endl;
-    for (idx_cluster = 0; idx_cluster < soc_.clusters_.size(); ++idx_cluster) {
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
         buf << "cluster " << idx_cluster << ": " << t.input.boost_freq[idx_cluster] << endl;
     }
     buf << "ms: " << Quantum2Ms(t.input.duration_quantum) << endl;
@@ -81,11 +83,11 @@ std::string Dumper::SimTunable2String(const Sim::Tunables &t) const {
 
 void Dumper::DumpToTXT(const std::vector<OpengaAdapter::Result> &results) const {
     using namespace std;
-    string filename = soc_.name_ + ".txt";
+    string   filename = soc_.name_ + ".txt";
     ofstream ofs(output_path_ + filename);
 
     int idx_ind = 0;
-    for (const auto &r: results) {
+    for (const auto &r : results) {
         ofs << "================" << endl << endl;
         ofs << ">>> " << idx_ind << " <<<" << endl;
         ofs << "performance: " << Double2Pct(r.score.performance) << endl;
@@ -100,11 +102,11 @@ void Dumper::DumpToTXT(const std::vector<OpengaAdapter::Result> &results) const 
 
 void Dumper::DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const {
     using namespace std;
-    string filename = soc_.name_ + ".csv";
+    string   filename = soc_.name_ + ".csv";
     ofstream ofs(output_path_ + filename);
 
     int idx_ind = 0;
-    for (const auto &r: results) {
+    for (const auto &r : results) {
         ofs << Double2Pct(r.score.performance) << ',';
         ofs << Double2Pct(r.score.battery_life) << ',';
         ofs << Double2Pct(r.score.idle_lasting) << ',';
@@ -114,4 +116,3 @@ void Dumper::DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const 
     }
     return;
 }
-

@@ -15,7 +15,28 @@ Soc::Soc(const std::string &model_file) {
     std::ifstream  ifs(model_file);
     nlohmann::json j;
     ifs >> j;
+
+    // SOC的型号
     name_ = j["name"];
+
+    // 提供的容量大于SOC最大容量xx%的跳过卡顿判断
+    enough_capacity_pct_ = j["enoughCapacityPct"];
+
+    // 使用的调度器类型
+    if (j["sched"] == "walt")
+        sched_type_ = kWalt;
+    else if (j["sched"] == "walt")
+        sched_type_ = kPelt;
+    else
+        sched_type_ = kLegacy;
+
+    // 多核心模式
+    if (j["intra"] == "asmp")
+        intra_type_ = kASMP;
+    else
+        intra_type_ = kSMP;
+        
+    // 频点与功耗
     for (const auto &it : j["cluster"]) {
         Cluster::Model m;
         m.core_num   = it["coreNum"];
@@ -28,7 +49,6 @@ Soc::Soc(const std::string &model_file) {
         }
         clusters_.push_back(Cluster(m));
     }
-    enough_capacity_pct_ = j["enoughCapacityPct"];
 }
 
 int Soc::GetEnoughCapacity(void) const {

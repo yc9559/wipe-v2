@@ -69,6 +69,7 @@ $(BUILD_DIR)/%.o: %.cpp
 -include $(foreach f,$(notdir $(basename $(SRC))),$(DEP_DIR)/$(f).d)
 
 clean:
+	@rm $(BIN_NAME)
 	@rm -rf $(BUILD_DIR)
 	@echo -e '\033[32m\033[1m clean done. \033[0m'
 
