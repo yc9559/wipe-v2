@@ -1,7 +1,7 @@
 {
     "name": "sd821_v3",
     "device": "ZUK Edge 2.1G 2.3G",
-    "enoughCapacityPct": 77,
+    "enoughCapacityPct": 71,
     "sched": "walt",
     "intra": "smp",
     "cluster": [

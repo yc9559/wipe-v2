@@ -1,7 +1,7 @@
 {
     "name": "sd835",
     "device": "小米6 模拟",
-    "enoughCapacityPct": 79,
+    "enoughCapacityPct": 73,
     "sched": "walt",
     "intra": "smp",
     "cluster": [

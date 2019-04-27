@@ -1,7 +1,7 @@
 {
     "name": "sd820",
     "device": "小米5 模拟",
-    "enoughCapacityPct": 79,
+    "enoughCapacityPct": 72,
     "sched": "walt",
     "intra": "smp",
     "cluster": [

@@ -1,7 +1,7 @@
 {
     "name": "sd821_v2",
     "device": "小米5p 模拟 2.0G 2.1G",
-    "enoughCapacityPct": 84,
+    "enoughCapacityPct": 77,
     "sched": "walt",
     "intra": "smp",
     "cluster": [
