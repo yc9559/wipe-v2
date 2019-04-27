@@ -10,8 +10,7 @@
         "./dataset/soc_model/model_sdm625.json",
         "./dataset/soc_model/model_sdm626.json",
         "./dataset/soc_model/model_sdm636.json",
-        "./dataset/soc_model/model_sd652_650.json",
-        "./dataset/soc_model/model_sd653.json"
+        "./dataset/soc_model/model_sd650_652_653.json"
     ],
     "mergedWorkload": "./dataset/workload/osborn/onscreen-merged.json",
     "idleWorkload": "./dataset/workload/osborn/offscreen-merged.json",
