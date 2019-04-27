@@ -77,17 +77,17 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
     const int enough_capacity = soc.GetEnoughCapacity();
     auto is_lag = [=](int required, int provided) { return (provided < required) && (provided < enough_capacity); };
 
-    std::vector<bool> common_lag_seq;
-    common_lag_seq.reserve(capacity_log.size());
+    // std::vector<bool> common_lag_seq;
+    // common_lag_seq.reserve(capacity_log.size());
 
-    auto iter_log = capacity_log.begin();
-    for (const auto &loadslice : workload.windowed_load_) {
-        common_lag_seq.push_back(is_lag(loadslice.max_load, *iter_log));
-        ++iter_log;
-    }
+    // auto iter_log = capacity_log.begin();
+    // for (const auto &loadslice : workload.windowed_load_) {
+    //     common_lag_seq.push_back(is_lag(loadslice.max_load, *iter_log));
+    //     ++iter_log;
+    // }
 
     std::vector<bool> render_lag_seq;
-    render_lag_seq.reserve(capacity_log.size());
+    render_lag_seq.reserve(workload.render_load_.size());
 
     for (const auto &r : workload.render_load_) {
         uint64_t aggreated_capacity = 0;
@@ -98,10 +98,11 @@ double Sim::EvalPerformance(const Workload &workload, const Soc &soc, const std:
         render_lag_seq.push_back(is_lag(r.frame_load, aggreated_capacity));
     }
 
+    // double common_lag_ratio = PerfPartitionEval(common_lag_seq);
     double render_lag_ratio = PerfPartitionEval(render_lag_seq);
-    double common_lag_ratio = PerfPartitionEval(common_lag_seq);
 
-    double score = misc_.render_fraction * render_lag_ratio + misc_.common_fraction * common_lag_ratio;
+    // double score = misc_.render_fraction * render_lag_ratio + misc_.common_fraction * common_lag_ratio;
+    double score = render_lag_ratio;
 
     return (score / default_score_.performance);
 }
