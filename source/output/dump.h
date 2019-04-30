@@ -16,7 +16,9 @@ public:
     void DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const;
 
 private:
-    std::string SimTunable2String(const Sim::Tunables &t) const;
+    std::string SimTunableToStr(const Sim::Tunables &t) const;
+    std::string TargetLoadsToStr(const Sim::Tunables &t, int cluster_idx) const;
+    std::string HispeedDelayToStr(const Sim::Tunables &t, int cluster_idx) const;
     int         Ms2Us(int ms) const { return (1000 * ms); }
     int         Mhz2kHz(int mhz) const { return (1000 * mhz); }
     double      Double2Pct(double d) const { return d * 100; }
