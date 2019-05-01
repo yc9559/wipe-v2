@@ -114,7 +114,11 @@ public:
 
     Soc(const std::string &model_file);
     ~Soc(){};
-    int GetEnoughCapacity(void) const;
+    IntraType GetIntraType(void) const { return intra_type_; }
+    SchedType GetSchedType(void) const { return sched_type_; }
+    int       GetEnoughCapacity(void) const {
+        return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * enough_capacity_pct_);
+    }
 
     std::string          name_;
     std::vector<Cluster> clusters_;

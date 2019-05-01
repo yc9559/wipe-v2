@@ -34,6 +34,7 @@ int main() {
         Dumper dumper(soc, "./output/");
         dumper.DumpToTXT(ret);
         dumper.DumpToCSV(ret);
+        dumper.DumpToShellScript(ret);
     }
 
     return 0;

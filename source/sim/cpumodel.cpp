@@ -50,7 +50,3 @@ Soc::Soc(const std::string &model_file) {
         clusters_.push_back(Cluster(m));
     }
 }
-
-int Soc::GetEnoughCapacity(void) const {
-    return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * enough_capacity_pct_);
-}

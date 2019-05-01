@@ -1,5 +1,7 @@
 #include "dump.h"
+#include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
 std::string Dumper::TargetLoadsToStr(const Sim::Tunables &t, int cluster_idx) const {
@@ -58,8 +60,27 @@ std::string Dumper::HispeedDelayToStr(const Sim::Tunables &t, int cluster_idx) c
             continue;
         }
     }
-    buf << endl;
 
+    return buf.str();
+}
+
+std::string Dumper::InputBoostToStr(const Sim::Tunables &t) const {
+    using namespace std;
+    ostringstream buf;
+
+    buf << "0:" << Mhz2kHz(t.input.boost_freq[0]);
+    int core_idx      = 1;
+    int core_idx_base = 0;
+    int n_core        = soc_.clusters_[0].model_.core_num;
+    for (; core_idx < core_idx_base + n_core; ++core_idx) {
+        buf << " " << core_idx << ":" << Mhz2kHz(t.input.boost_freq[0]);
+    }
+    core_idx_base += core_idx;
+    // 为了适应4+2而cpu模型却使用4+4的情况(避免只有2个大核相比4个小核在算功耗上有核心数量的优势)
+    // 因此使用"0:902000 1:902000 2:902000 3:902000 4:1401000"这样的通配方式
+    if (soc_.clusters_.size() > 1) {
+        buf << " " << core_idx << ":" << Mhz2kHz(t.input.boost_freq[1]);
+    }
     return buf.str();
 }
 
@@ -141,4 +162,291 @@ void Dumper::DumpToCSV(const std::vector<OpengaAdapter::Result> &results) const 
         idx_ind++;
     }
     return;
+}
+
+std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
+    using namespace std;
+    ostringstream buf;
+
+    int cluster_num = soc_.clusters_.size();
+    int n           = 0;
+
+    string prefix;
+    {
+        ostringstream prefix_ss;
+        prefix_ss << "level" << level << "_val";
+        prefix = prefix_ss.str();
+    }
+
+    // /sys/module/msm_thermal/core_control/enabled
+    buf << prefix << ++n << "=\"0\"" << endl;
+    // /sys/module/msm_thermal/parameters/enabled
+    buf << prefix << ++n << "=\"N\"" << endl;
+
+    // level1_val1="38000"
+    auto append_val     = [&](int param_val) { buf << prefix << ++n << "=\"" << param_val << "\"" << endl; };
+    auto append_str_val = [&](const string &param_val) { buf << prefix << ++n << "=\"" << param_val << "\"" << endl; };
+    auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
+
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        const auto &g = t.interactive[idx_cluster];
+        // 核心上线 /sys/devices/system/cpu/cpu4/online
+        append_val(1);
+        // append_cpufreq_param("scaling_governor", idx_cluster);
+        append_str_val("interactive");
+        // append_cpufreq_param("scaling_min_freq", idx_cluster);
+        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.min_freq));
+        // append_cpufreq_param("scaling_max_freq", idx_cluster);
+        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.max_freq));
+        // append_interactive_param("hispeed_freq", idx_cluster);
+        append_val(Mhz2kHz(g.hispeed_freq));
+        // append_interactive_param("go_hispeed_load", idx_cluster);
+        append_val(g.go_hispeed_load);
+        // append_interactive_param("min_sample_time", idx_cluster);
+        append_val(multiple_to_us(g.min_sample_time));
+        // append_interactive_param("max_freq_hysteresis", idx_cluster);
+        append_val(multiple_to_us(g.max_freq_hysteresis));
+        // append_interactive_param("above_hispeed_delay", idx_cluster);
+        append_str_val(HispeedDelayToStr(t, idx_cluster));
+        // append_interactive_param("target_loads", idx_cluster);
+        append_str_val(TargetLoadsToStr(t, idx_cluster));
+        // append_interactive_param("timer_rate", idx_cluster);
+        append_val(Ms2Us(Quantum2Ms(t.sched.timer_rate)));
+        // append_interactive_param("timer_slack", idx_cluster);
+        append_val(-1);
+        // append_interactive_param("ignore_hispeed_on_notif", idx_cluster);
+        append_val(0);
+        // append_interactive_param("boost", idx_cluster);
+        append_val(0);
+        // append_interactive_param("fast_ramp_down", idx_cluster);
+        append_val(0);
+        // append_interactive_param("align_windows", idx_cluster);
+        append_val(0);
+        // append_interactive_param("use_migration_notif", idx_cluster);
+        append_val(1);
+        // append_interactive_param("enable_prediction", idx_cluster);
+        append_val(0);
+        // append_interactive_param("use_sched_load", idx_cluster);
+        append_val(1);
+        // append_interactive_param("boostpulse_duration", idx_cluster);
+        append_val(0);
+    }
+
+    if (soc_.GetSchedType() == Soc::kWalt) {
+        // 避免从50/50设置到70/70时，sched_downmigrate设置失败，由于downmigrate<=upmigrate
+        // append_hmp_param("sched_downmigrate");
+        append_val(t.sched.sched_downmigrate);
+        // append_hmp_param("sched_upmigrate");
+        append_val(t.sched.sched_upmigrate);
+        // append_hmp_param("sched_downmigrate");
+        append_val(t.sched.sched_downmigrate);
+        // append_hmp_param("sched_freq_aggregate");
+        append_val(0);
+        // append_hmp_param("sched_ravg_hist_size");
+        append_val(t.sched.sched_ravg_hist_size);
+        // append_hmp_param("sched_window_stats_policy");
+        append_val(t.sched.sched_window_stats_policy);
+        // append_hmp_param("sched_spill_load");
+        append_val(90);
+        // append_hmp_param("sched_restrict_cluster_spill");
+        append_val(1);
+        // append_hmp_param("sched_boost");
+        append_val(0);
+        // append_hmp_param("sched_prefer_sync_wakee_to_waker");
+        append_val(1);
+        // append_hmp_param("sched_freq_inc_notify");
+        append_val(200000);
+        // append_hmp_param("sched_freq_dec_notify");
+        append_val(400000);
+    }
+
+    // 触摸升频
+    // /sys/module/msm_performance/parameters/touchboost
+    append_val(0);
+    // /sys/module/cpu_boost/parameters/input_boost_ms
+    append_val(Quantum2Ms(t.input.duration_quantum));
+    // /sys/module/cpu_boost/parameters/input_boost_freq
+    append_str_val(InputBoostToStr(t));
+
+    return buf.str();
+}
+
+std::string Dumper::SysfsObjToStr(void) {
+    using namespace std;
+    ostringstream buf;
+
+    buf << "SCHED_DIR=\"/proc/sys/kernel\"" << endl;
+
+    // 单集群情况
+    if (soc_.clusters_.size() < 2) {
+        buf << "C0_GOVERNOR_DIR=\"/sys/devices/system/cpu/cpufreq/interactive\"" << endl;
+        buf << "C1_GOVERNOR_DIR=\"\"" << endl;
+        buf << "C0_DIR=\"/sys/devices/system/cpu/cpu0\"" << endl;
+        buf << "C1_DIR=\"/sys/devices/system/cpu/cpu4\"" << endl;
+    } else {
+        int c0_core_num = soc_.clusters_[0].model_.core_num;
+        buf << "C0_GOVERNOR_DIR=\"/sys/devices/system/cpu/cpu0/cpufreq/interactive\"" << endl;
+        buf << "C1_GOVERNOR_DIR=\"/sys/devices/system/cpu/cpu" << c0_core_num << "/cpufreq/interactive\"" << endl;
+        buf << "C0_DIR=\"/sys/devices/system/cpu/cpu0\"" << endl;
+        buf << "C1_DIR=\"/sys/devices/system/cpu/cpu" << c0_core_num << "\"" << endl;
+    }
+    buf << endl;
+
+    string prefix      = "sysfs_obj";
+    int    cluster_num = soc_.clusters_.size();
+    int    n           = 0;
+
+    // disable hotplug to switch governor
+    buf << prefix << ++n << "=\"/sys/module/msm_thermal/core_control/enabled\"" << endl;
+    buf << prefix << ++n << "=\"/sys/module/msm_thermal/parameters/enabled\"" << endl;
+
+    // sysfs_obj1="${C0_GOVERNOR_DIR}/target_loads"
+    auto append_interactive_param = [&](const string &param_name, int cluster_idx) {
+        buf << prefix << ++n << "=\"${C" << cluster_idx << "_GOVERNOR_DIR}/" << param_name << "\"" << endl;
+    };
+    auto append_cpufreq_param = [&](const string &param_name, int cluster_idx) {
+        buf << prefix << ++n << "=\"${C" << cluster_idx << "_DIR}/cpufreq/" << param_name << "\"" << endl;
+    };
+    auto append_hmp_param = [&](const string &param_name) {
+        buf << prefix << ++n << "=\"${SCHED_DIR}/" << param_name << "\"" << endl;
+    };
+
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        // 核心上线
+        buf << prefix << ++n << "=\"${C" << idx_cluster << "_DIR}/online\"" << endl;
+        // 统一调速器选择和最低最高频率
+        append_cpufreq_param("scaling_governor", idx_cluster);
+        append_cpufreq_param("scaling_min_freq", idx_cluster);
+        append_cpufreq_param("scaling_max_freq", idx_cluster);
+        append_interactive_param("hispeed_freq", idx_cluster);
+        append_interactive_param("go_hispeed_load", idx_cluster);
+        append_interactive_param("min_sample_time", idx_cluster);
+        append_interactive_param("max_freq_hysteresis", idx_cluster);
+        append_interactive_param("above_hispeed_delay", idx_cluster);
+        append_interactive_param("target_loads", idx_cluster);
+        append_interactive_param("timer_rate", idx_cluster);
+        append_interactive_param("timer_slack", idx_cluster);
+        append_interactive_param("ignore_hispeed_on_notif", idx_cluster);
+        append_interactive_param("boost", idx_cluster);
+        append_interactive_param("fast_ramp_down", idx_cluster);
+        append_interactive_param("align_windows", idx_cluster);
+        append_interactive_param("use_migration_notif", idx_cluster);
+        append_interactive_param("enable_prediction", idx_cluster);
+        append_interactive_param("use_sched_load", idx_cluster);
+        append_interactive_param("boostpulse_duration", idx_cluster);
+    }
+
+    if (soc_.GetSchedType() == Soc::kWalt) {
+        // 避免从50/50设置到70/70时，sched_downmigrate设置失败，由于downmigrate<=upmigrate
+        append_hmp_param("sched_downmigrate");
+        append_hmp_param("sched_upmigrate");
+        append_hmp_param("sched_downmigrate");
+        append_hmp_param("sched_freq_aggregate");
+        append_hmp_param("sched_ravg_hist_size");
+        append_hmp_param("sched_window_stats_policy");
+        append_hmp_param("sched_spill_load");
+        append_hmp_param("sched_restrict_cluster_spill");
+        append_hmp_param("sched_boost");
+        append_hmp_param("sched_prefer_sync_wakee_to_waker");
+        append_hmp_param("sched_freq_inc_notify");
+        append_hmp_param("sched_freq_dec_notify");
+    }
+
+    // 触摸升频
+    buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/touchboost\"" << endl;
+    buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_ms\"" << endl;
+    buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_freq\"" << endl;
+
+    n_param_ = n;
+    return buf.str();
+}
+
+void Dumper::DumpToShellScript(const std::vector<OpengaAdapter::Result> &results) {
+    using namespace std;
+    string   filename = soc_.name_ + ".sh";
+    ofstream ofs(output_path_ + filename);
+
+    string shell_template;
+    {
+        ifstream      ifs("./template/powercfg_template.sh");
+        ostringstream ss;
+        ss << ifs.rdbuf();
+        shell_template = ss.str();
+    }
+
+    string datetime;
+    {
+        ostringstream ss;
+
+        auto t = chrono::system_clock::to_time_t(chrono::system_clock::now());
+        ss << put_time(localtime(&t), "%F %T");
+        datetime = ss.str();
+    }
+
+    ReplaceAll(shell_template, "[project_name]", "Project WIPE v2");
+    ReplaceAll(shell_template, "[github_url]", "https://github.com/yc9559/wipe-v2");
+    ReplaceAll(shell_template, "[yourname]", "yc9559");
+    ReplaceAll(shell_template, "[platform_name]", soc_.name_);
+    ReplaceAll(shell_template, "[generated_time]", datetime);
+    Replace(shell_template, "[sysfs_obj]", SysfsObjToStr());
+    Replace(shell_template, "[param_num]", to_string(n_param_));
+
+    // 性能评分低于level中续航最长的
+    // level 1 -> 0.2
+    // level 5 -> 1.0
+    auto find_level = [&results](int level) {
+        double perf_thd      = level * 2 * 0.1;
+        double max_batt_life = 0.0;
+        int    best_idx      = 0;
+        int    idx_ind       = 0;
+        for (const auto &r : results) {
+            if ((r.score.performance < perf_thd) && (r.score.battery_life > max_batt_life)) {
+                best_idx      = idx_ind;
+                max_batt_life = r.score.battery_life;
+            }
+            ++idx_ind;
+        }
+        return best_idx;
+    };
+
+    // 替换 [levelx] 为 参数内容
+    for (int level = 0; level < 7; ++level) {
+        int    ind_idx = find_level(level);
+        string level_content;
+        {
+            ostringstream ss;
+            const auto &  score = results[ind_idx].score;
+            ss.setf(ios::fixed, ios::floatfield);
+            ss.precision(1);
+            ss << "# lag percent: " << Double2Pct(score.performance) << "%" << endl;
+            ss << "# battery life: " << Double2Pct(score.battery_life) << "%" << endl;
+            ss << LevelToStr(results[ind_idx].tunable, level);
+            level_content = ss.str();
+        }
+
+        ostringstream sub_ss;
+        sub_ss << "[level" << level << "]";
+        Replace(shell_template, sub_ss.str(), level_content);
+    }
+
+    ofs << shell_template;
+    return;
+}
+
+bool Dumper::Replace(std::string &str, const std::string &from, const std::string &to) {
+    size_t start_pos = str.find(from);
+    if (start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
+void Dumper::ReplaceAll(std::string &str, const std::string &from, const std::string &to) {
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();  // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
 }
