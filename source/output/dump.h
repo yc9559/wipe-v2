@@ -9,6 +9,7 @@
 #include "sim.h"
 
 class Dumper {
+#define PERF_LEVEL_NUM 7
 public:
     Dumper() = delete;
     Dumper(const Soc &soc, const std::string &output_path) : soc_(soc), output_path_(output_path){};
@@ -20,7 +21,7 @@ private:
     std::string SimTunableToStr(const Sim::Tunables &t) const;
     std::string TargetLoadsToStr(const Sim::Tunables &t, int cluster_idx) const;
     std::string HispeedDelayToStr(const Sim::Tunables &t, int cluster_idx) const;
-    std::string InputBoostToStr(const Sim::Tunables &t) const;
+    std::string QcomFreqParamToStr(int freq0, int freq1) const;
     std::string LevelToStr(const Sim::Tunables &t, int level) const;
     std::string SysfsObjToStr(void);
     bool        Replace(std::string &str, const std::string &from, const std::string &to);

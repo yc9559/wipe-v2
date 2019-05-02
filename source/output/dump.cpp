@@ -64,22 +64,21 @@ std::string Dumper::HispeedDelayToStr(const Sim::Tunables &t, int cluster_idx) c
     return buf.str();
 }
 
-std::string Dumper::InputBoostToStr(const Sim::Tunables &t) const {
+// 生成形如"0:902000 1:0 2:0 3:0 4:1401000"的参数
+std::string Dumper::QcomFreqParamToStr(int freq0, int freq1) const {
     using namespace std;
     ostringstream buf;
 
-    buf << "0:" << Mhz2kHz(t.input.boost_freq[0]);
-    int core_idx      = 1;
-    int core_idx_base = 0;
-    int n_core        = soc_.clusters_[0].model_.core_num;
-    for (; core_idx < core_idx_base + n_core; ++core_idx) {
-        buf << " " << core_idx << ":" << Mhz2kHz(t.input.boost_freq[0]);
+    buf << "0:" << Mhz2kHz(freq0);
+    int core_idx = 1;
+    int n_core   = soc_.clusters_[0].model_.core_num;
+    for (; core_idx < n_core; ++core_idx) {
+        buf << " " << core_idx << ":0";
     }
-    core_idx_base += core_idx;
     // 为了适应4+2而cpu模型却使用4+4的情况(避免只有2个大核相比4个小核在算功耗上有核心数量的优势)
     // 因此使用"0:902000 1:902000 2:902000 3:902000 4:1401000"这样的通配方式
     if (soc_.clusters_.size() > 1) {
-        buf << " " << core_idx << ":" << Mhz2kHz(t.input.boost_freq[1]);
+        buf << " " << core_idx << ":" << Mhz2kHz(freq1);
     }
     return buf.str();
 }
@@ -188,6 +187,28 @@ std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
     auto append_str_val = [&](const string &param_val) { buf << prefix << ++n << "=\"" << param_val << "\"" << endl; };
     auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
 
+    // 高通平台的最低最高频率限制接口
+    if (soc_.GetSchedType() == Soc::kWalt) {
+        int f0, f1;
+        if (cluster_num > 1) {
+            // /sys/module/msm_performance/parameters/cpu_min_freq
+            f0 = soc_.clusters_[0].model_.min_freq - 1;
+            f1 = soc_.clusters_[1].model_.min_freq - 1;
+            append_str_val(QcomFreqParamToStr(f0, f1));
+            // /sys/module/msm_performance/parameters/cpu_max_freq
+            f0 = soc_.clusters_[0].model_.max_freq + 1;
+            f1 = soc_.clusters_[1].model_.max_freq + 1;
+            append_str_val(QcomFreqParamToStr(f0, f1));
+        } else {
+            // /sys/module/msm_performance/parameters/cpu_min_freq
+            f0 = soc_.clusters_[0].model_.min_freq - 1;
+            append_str_val(QcomFreqParamToStr(f0, 0));
+            // /sys/module/msm_performance/parameters/cpu_max_freq
+            f0 = soc_.clusters_[0].model_.max_freq + 1;
+            append_str_val(QcomFreqParamToStr(f0, 0));
+        }
+    }
+
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
         const auto &g = t.interactive[idx_cluster];
         // 核心上线 /sys/devices/system/cpu/cpu4/online
@@ -195,9 +216,14 @@ std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
         // append_cpufreq_param("scaling_governor", idx_cluster);
         append_str_val("interactive");
         // append_cpufreq_param("scaling_min_freq", idx_cluster);
-        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.min_freq));
+        // 假设频率表为633600 1036000，设置为632000，由于低于最小值，会被修正为633600
+        // 假设频率表为400000 633600 1036000，设置为632000，由于大于最小值，不会被强行修正，对于调频器等效为最低633600
+        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.min_freq - 1));
         // append_cpufreq_param("scaling_max_freq", idx_cluster);
-        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.max_freq));
+        // 假设频率表为1747200 1843200，设置为1844000，由于大于最大值，会被修正为1843200
+        // 假设频率表为1747200 1843200
+        // 1958000，设置为1844000，由于小于最大值，不会被强行修正，对于调频器等效为最大1843200
+        append_val(Mhz2kHz(soc_.clusters_[idx_cluster].model_.max_freq + 1));
         // append_interactive_param("hispeed_freq", idx_cluster);
         append_val(Mhz2kHz(g.hispeed_freq));
         // append_interactive_param("go_hispeed_load", idx_cluster);
@@ -266,7 +292,7 @@ std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
     // /sys/module/cpu_boost/parameters/input_boost_ms
     append_val(Quantum2Ms(t.input.duration_quantum));
     // /sys/module/cpu_boost/parameters/input_boost_freq
-    append_str_val(InputBoostToStr(t));
+    append_str_val(QcomFreqParamToStr(t.input.boost_freq[0], t.input.boost_freq[1]));
 
     return buf.str();
 }
@@ -310,6 +336,12 @@ std::string Dumper::SysfsObjToStr(void) {
     auto append_hmp_param = [&](const string &param_name) {
         buf << prefix << ++n << "=\"${SCHED_DIR}/" << param_name << "\"" << endl;
     };
+
+    // 高通平台的最低最高频率限制接口
+    if (soc_.GetSchedType() == Soc::kWalt) {
+        buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_min_freq\"" << endl;
+        buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_max_freq\"" << endl;
+    }
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
         // 核心上线
@@ -391,11 +423,10 @@ void Dumper::DumpToShellScript(const std::vector<OpengaAdapter::Result> &results
     Replace(shell_template, "[sysfs_obj]", SysfsObjToStr());
     Replace(shell_template, "[param_num]", to_string(n_param_));
 
+    double level_map[PERF_LEVEL_NUM] = {0.0, 0.15, 0.30, 0.50, 0.75, 0.99, 1.20};
     // 性能评分低于level中续航最长的
-    // level 1 -> 0.2
-    // level 5 -> 1.0
-    auto find_level = [&results](int level) {
-        double perf_thd      = level * 2 * 0.1;
+    auto find_level = [level_map, &results](int level) {
+        double perf_thd      = level_map[level];
         double max_batt_life = 0.0;
         int    best_idx      = 0;
         int    idx_ind       = 0;
@@ -410,7 +441,7 @@ void Dumper::DumpToShellScript(const std::vector<OpengaAdapter::Result> &results
     };
 
     // 替换 [levelx] 为 参数内容
-    for (int level = 0; level < 7; ++level) {
+    for (int level = 0; level < PERF_LEVEL_NUM; ++level) {
         int    ind_idx = find_level(level);
         string level_content;
         {

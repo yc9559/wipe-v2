@@ -345,7 +345,7 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
             t.interactive[idx].above_hispeed_delay[i] = 1;
         }
         for (int i = 0; i < n_targetloads; ++i) {
-            t.interactive[idx].target_loads[i] = 85;
+            t.interactive[idx].target_loads[i] = 90;
         }
         idx++;
     }
@@ -366,7 +366,7 @@ Sim::Tunables OpengaAdapter::GenerateDefaultTunables(void) const {
     }
     if (soc_->clusters_.size() > 1)
         t.input.boost_freq[1] = soc_->clusters_[1].model_.min_freq;
-    t.input.duration_quantum = 10;
+    t.input.duration_quantum = 100;
     return t;
 }
 
