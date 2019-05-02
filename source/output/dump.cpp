@@ -1,4 +1,7 @@
 #include "dump.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <chrono>
 #include <fstream>
 #include <iomanip>
@@ -395,8 +398,17 @@ std::string Dumper::SysfsObjToStr(void) {
 
 void Dumper::DumpToShellScript(const std::vector<OpengaAdapter::Result> &results) {
     using namespace std;
-    string   filename = soc_.name_ + ".sh";
-    ofstream ofs(output_path_ + filename);
+    string filedir  = output_path_ + soc_.name_ + "/";
+    string filepath = filedir + "powercfg";
+
+    if (access(filedir.c_str(), F_OK) == -1) {
+        if (mkdir(filedir.c_str(), 0755) == -1) {
+            cout << filedir << " cannot be created." << endl;
+            return;
+        }
+    }
+
+    ofstream ofs(filepath);
 
     string shell_template;
     {
