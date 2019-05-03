@@ -132,7 +132,7 @@ restore_default()
         do
             eval obj="$"bak_obj${n}
             eval val="$"bak_val${n}
-            lock_value ${val} ${obj}
+            lock_value "${val}" ${obj}
         done
         echo "Restore OK"
     else
@@ -201,6 +201,7 @@ fi
 
 if [ "$action" = "restore" ]; then
 	restore_default
+    rm ${CUR_LEVEL_FILE}
 fi
 
 if [ "$action" = "powersave" ]; then
