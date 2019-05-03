@@ -399,7 +399,7 @@ std::string Dumper::SysfsObjToStr(void) {
 void Dumper::DumpToShellScript(const std::vector<OpengaAdapter::Result> &results) {
     using namespace std;
     string filedir  = output_path_ + soc_.name_ + "/";
-    string filepath = filedir + "powercfg";
+    string filepath = filedir + "powercfg.sh";
 
     if (access(filedir.c_str(), F_OK) == -1) {
         if (mkdir(filedir.c_str(), 0755) == -1) {
