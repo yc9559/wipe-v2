@@ -1,25 +1,14 @@
-#include "hmp.h"
+#include "hmp_walt.h"
 #include <string.h>
 #include <algorithm>
 #include <iostream>
 #include <numeric>
 
-WaltHmp::WaltHmp(Cfg cfg)
-    : tunables_(cfg.tunables),
-      little_(cfg.little),
-      big_(cfg.big),
-      active_(big_),
-      idle_(little_),
-      governor_little_(cfg.governor_little),
-      governor_big_(cfg.governor_big),
-      entry_cnt_(0),
-      max_load_sum_(0),
-      governor_cnt_(0) {
+WaltHmp::WaltHmp(Cfg cfg) : Hmp(cfg), tunables_(cfg.tunables), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {
     up_demand_thd_   = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_upmigrate;
     down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
     memset(sum_history_, 0, sizeof(sum_history_));
     memset(loads_sum_, 0, sizeof(loads_sum_));
-    cluster_num_ = (big_ == little_) ? 1 : 2;
 }
 
 // 更新负载滑动窗口，返回预计的负载需求，@in_demand为freq*busy_pct*efficiency
@@ -68,7 +57,7 @@ void WaltHmp::update_history(int in_demand) {
 // demand : freq * busy_pct * efficiency，walt输出
 // load: freq * busy_pct * efficiency
 // load 最大值 2500 * 2048 * 100，sum最大值 3000 * 2048 * 400，可能大于UINT32_MAX
-int WaltHmp::WaltScheduler(int max_load, const int *loads, int n_load, int now) {
+int WaltHmp::SchedulerTick(int max_load, const int *loads, int n_load, int now) {
     ++entry_cnt_;
     max_load_sum_ += max_load;
     for (int i = 0; i < n_load; ++i) {

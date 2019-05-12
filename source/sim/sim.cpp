@@ -40,7 +40,7 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
         power_log[quantum_cnt] += QuantifyPower(hmp.CalcPower(w.load));
 
         input.HandleInput(soc, w.has_input_event, quantum_cnt);
-        capacity = hmp.WaltScheduler(w.max_load, w.load, workload.core_num_, quantum_cnt);
+        capacity = hmp.SchedulerTick(w.max_load, w.load, workload.core_num_, quantum_cnt);
 
         quantum_cnt++;
     }
@@ -54,7 +54,7 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
         idle_power_comsumed += QuantifyPower(hmp.CalcPowerForIdle(w.load));
 
         input.HandleInput(soc, w.has_input_event, quantum_cnt);
-        capacity = hmp.WaltScheduler(w.max_load, w.load, idleload.core_num_, quantum_cnt);
+        capacity = hmp.SchedulerTick(w.max_load, w.load, idleload.core_num_, quantum_cnt);
 
         quantum_cnt++;
     }

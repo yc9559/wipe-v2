@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 #include "cpumodel.h"
-#include "hmp.h"
+#include "hmp_walt.h"
 #include "interactive.h"
 #include "workload.h"
 

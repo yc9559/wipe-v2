@@ -5,80 +5,52 @@
 #include "cpumodel.h"
 #include "interactive.h"
 
-const int kWaltHmpParamFixedLen = 6;
-
-class WaltHmp {
+class Hmp {
 public:
-    enum { WINDOW_STATS_RECENT = 0, WINDOW_STATS_MAX, WINDOW_STATS_MAX_RECENT_AVG, WINDOW_STATS_AVG };
+    struct HmpTunables {};
 
-    typedef struct _WaltHmpTunables {
-        int timer_rate;
-        int sched_upmigrate;
-        int sched_downmigrate;
-        int sched_ravg_hist_size;
-        int sched_window_stats_policy;
-        int sched_freq_aggregate_threshold_pct;
-    } Tunables;
-
-    typedef struct _WaltCfg {
-        Tunables     tunables;
+    struct HmpCfg {
         Cluster *    little;
         Cluster *    big;
         Interactive *governor_little;
         Interactive *governor_big;
-    } Cfg;
+    };
 
-    WaltHmp(){};
-    WaltHmp(Cfg cfg);
-    int WaltScheduler(int max_load, const int *loads, int n_load, int now);
+    Hmp(){};
+    Hmp(HmpCfg cfg)
+        : little_(cfg.little),
+          big_(cfg.big),
+          active_(big_),
+          idle_(little_),
+          governor_little_(cfg.governor_little),
+          governor_big_(cfg.governor_big) {
+        cluster_num_ = (big_ == little_) ? 1 : 2;
+    }
+
+    int SchedulerTick(int max_load, const int *loads, int n_load, int now) { return 0; };
     int CalcPower(const int *loads) const;
     int CalcPowerForIdle(const int *loads) const;
 
-private:
-#define RavgHistSizeMax 5
+protected:
 #define NLoadsMax 4
-    Tunables     tunables_;
+    int LoadToBusyPct(const Cluster *c, uint64_t load) const;
+
     Cluster *    little_;
     Cluster *    big_;
     Cluster *    active_;
     Cluster *    idle_;
     Interactive *governor_little_;
     Interactive *governor_big_;
-    uint64_t     demand_;
-    uint64_t     up_demand_thd_;
-    uint64_t     down_demand_thd_;
-    int          sum_history_[RavgHistSizeMax];
-    int          entry_cnt_;
-    uint64_t     max_load_sum_;
-    uint64_t     loads_sum_[NLoadsMax];
-    int          governor_cnt_;
     int          cluster_num_;
-
-    int  LoadToBusyPct(const Cluster *c, uint64_t load) const;
-    void update_history(int in_demand);
-    int  AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const;
 };
 
-inline int WaltHmp::LoadToBusyPct(const Cluster *c, uint64_t load) const {
+inline int Hmp::LoadToBusyPct(const Cluster *c, uint64_t load) const {
     return (load / (c->cur_freq_ * c->model_.efficiency));
-}
-
-inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const {
-    uint64_t aggregated_load = 0;
-    for (int i = 0; i < active_->model_.core_num; ++i) {
-        aggregated_load += loads[i];
-    }
-    int aggregated_busy_pct = LoadToBusyPct(active_, aggregated_load);
-    if (aggregated_busy_pct > tunables_.sched_freq_aggregate_threshold_pct) {
-        return aggregated_busy_pct;
-    } else {
-        return LoadToBusyPct(active_, demand_);
-    }
 }
 
 // 外层保证已执行adaptload，负载百分比不超过100%
 // loads: freq * busy_pct * efficiency
-inline int WaltHmp::CalcPower(const int *loads) const {
+inline int Hmp::CalcPower(const int *loads) const {
     const int idle_load_pcts[] = {1, 0, 0, 0};
     int       load_pcts[NLoadsMax];
     for (int i = 0; i < NLoadsMax; ++i) {
@@ -92,7 +64,7 @@ inline int WaltHmp::CalcPower(const int *loads) const {
 }
 
 // 如果负载没有被移动到大核，则认为大核没有闲置耗电，减少待机时大核上线概率
-inline int WaltHmp::CalcPowerForIdle(const int *loads) const {
+inline int Hmp::CalcPowerForIdle(const int *loads) const {
     const int idle_load_pcts[] = {100, 0, 0, 0};
     int       pwr              = 0;
     if (active_ == little_) {
