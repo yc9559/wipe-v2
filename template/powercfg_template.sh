@@ -77,7 +77,7 @@ check_value()
             # input_boost_freq has a additional line break
             case1=$(echo "${actual}" | grep "${expected}")
             # Actual scaling_min_freq is 633600, but given is 633000. That's OK
-            case2=$(echo "${2}" | grep "scaling_")
+            case2=$(echo "${2}" | grep "scaling_m")
             if [ "${case1}" == "" ] && [ "${case2}" == "" ]; then
                 NOT_MATCH_NUM=$(expr ${NOT_MATCH_NUM} + 1)
                 echo "[FAIL] ${2}"
