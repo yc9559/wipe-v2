@@ -4,6 +4,7 @@
     "enoughCapacityPct": 83,
     "sched": "pelt",
     "intra": "smp",
+    "inputBoost": false,
     "cluster": [
         {
             "coreNum": 4,

@@ -104,11 +104,10 @@ std::string Dumper::SimTunableToStr(const Sim::Tunables &t) const {
         buf << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
 
         buf << "above_hispeed_delay: ";
-        buf << HispeedDelayToStr(t, idx_cluster);
-
+        buf << HispeedDelayToStr(t, idx_cluster) << endl;
         buf << "target_loads: ";
-        buf << TargetLoadsToStr(t, idx_cluster);
-        buf << endl << endl;
+        buf << TargetLoadsToStr(t, idx_cluster) << endl;
+        buf << endl;
     }
 
     buf << "[hmp sched]" << endl << endl;
@@ -120,12 +119,14 @@ std::string Dumper::SimTunableToStr(const Sim::Tunables &t) const {
     buf << "timer_rate: " << Ms2Us(Quantum2Ms(t.sched.timer_rate)) << endl;
     buf << endl;
 
-    buf << "[input boost]" << endl << endl;
-    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        buf << "cluster " << idx_cluster << ": " << t.input.boost_freq[idx_cluster] << endl;
+    if (soc_.GetInputBoostFeature() == true) {
+        buf << "[input boost]" << endl << endl;
+        for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+            buf << "cluster " << idx_cluster << ": " << t.input.boost_freq[idx_cluster] << endl;
+        }
+        buf << "ms: " << Quantum2Ms(t.input.duration_quantum) << endl;
+        buf << endl;
     }
-    buf << "ms: " << Quantum2Ms(t.input.duration_quantum) << endl;
-    buf << endl;
 
     return buf.str();
 }
@@ -290,12 +291,14 @@ std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
     }
 
     // 触摸升频
-    // /sys/module/msm_performance/parameters/touchboost
-    append_val(0);
-    // /sys/module/cpu_boost/parameters/input_boost_ms
-    append_val(Quantum2Ms(t.input.duration_quantum));
-    // /sys/module/cpu_boost/parameters/input_boost_freq
-    append_str_val(QcomFreqParamToStr(t.input.boost_freq[0], t.input.boost_freq[1]));
+    if (soc_.GetInputBoostFeature() == true) {
+        // /sys/module/msm_performance/parameters/touchboost
+        append_val(0);
+        // /sys/module/cpu_boost/parameters/input_boost_ms
+        append_val(Quantum2Ms(t.input.duration_quantum));
+        // /sys/module/cpu_boost/parameters/input_boost_freq
+        append_str_val(QcomFreqParamToStr(t.input.boost_freq[0], t.input.boost_freq[1]));
+    }
 
     return buf.str();
 }
@@ -388,9 +391,11 @@ std::string Dumper::SysfsObjToStr(void) {
     }
 
     // 触摸升频
-    buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/touchboost\"" << endl;
-    buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_ms\"" << endl;
-    buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_freq\"" << endl;
+    if (soc_.GetInputBoostFeature() == true) {
+        buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/touchboost\"" << endl;
+        buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_ms\"" << endl;
+        buf << prefix << ++n << "=\"/sys/module/cpu_boost/parameters/input_boost_freq\"" << endl;
+    }
 
     n_param_ = n;
     return buf.str();

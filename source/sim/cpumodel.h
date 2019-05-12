@@ -116,6 +116,7 @@ public:
     ~Soc(){};
     IntraType GetIntraType(void) const { return intra_type_; }
     SchedType GetSchedType(void) const { return sched_type_; }
+    bool      GetInputBoostFeature(void) const { return input_boost_; }
     int       GetEnoughCapacity(void) const {
         return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * enough_capacity_pct_);
     }
@@ -128,6 +129,7 @@ private:
 
     IntraType intra_type_;
     SchedType sched_type_;
+    bool      input_boost_;
     int       enough_capacity_pct_;  // 提供的容量大于SOC最大容量xx%的跳过卡顿判断
 };
 

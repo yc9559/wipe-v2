@@ -12,6 +12,9 @@ Sim::Score Sim::Run(const Workload &workload, const Workload &idleload, Soc soc,
     auto big_governor    = Interactive(tunables_.interactive[cl_big_idx], &soc.clusters_[cl_big_idx]);
     auto input           = InputBoost(tunables_.input);
 
+    if (soc.GetInputBoostFeature() == false)
+        input = InputBoost();
+
     WaltHmp::Cfg waltcfg;
     waltcfg.tunables        = tunables_.sched;
     waltcfg.little          = &soc.clusters_[0];

@@ -35,7 +35,10 @@ Soc::Soc(const std::string &model_file) {
         intra_type_ = kASMP;
     else
         intra_type_ = kSMP;
-        
+
+    // 是否支持输入升频
+    input_boost_ = j["inputBoost"];
+
     // 频点与功耗
     for (const auto &it : j["cluster"]) {
         Cluster::Model m;

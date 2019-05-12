@@ -4,6 +4,7 @@
     "enoughCapacityPct": 74,
     "sched": "walt",
     "intra": "smp",
+    "inputBoost": true,
     "cluster": [
         {
             "coreNum": 2,
