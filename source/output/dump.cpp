@@ -242,7 +242,7 @@ std::string Dumper::LevelToStr(const Sim::Tunables &t, int level) const {
         // append_interactive_param("timer_rate", idx_cluster);
         append_val(Ms2Us(Quantum2Ms(t.sched.timer_rate)));
         // append_interactive_param("timer_slack", idx_cluster);
-        append_val(-1);
+        append_val(12345678);
         // append_interactive_param("ignore_hispeed_on_notif", idx_cluster);
         append_val(0);
         // append_interactive_param("boost", idx_cluster);
