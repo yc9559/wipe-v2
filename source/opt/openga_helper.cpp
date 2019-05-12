@@ -208,9 +208,9 @@ inline int QuatFreqParam(double ratio, const Cluster &cluster, const OpengaAdapt
 inline int QuatLoadParam(double ratio, const OpengaAdapter::ParamDescElement &desc) {
     int target_load = Quantify(ratio, desc);
     // 减少targetload没必要的参数档位，降低参数复杂度
-    if (target_load > 15 && target_load < 85) {
-        target_load = target_load >> 2 << 2;
-    }
+    // if (target_load > 15 && target_load < 85) {
+    //     target_load = target_load >> 2 << 2;
+    // }
     return target_load;
 }
 
