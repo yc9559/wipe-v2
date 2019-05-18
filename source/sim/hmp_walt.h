@@ -39,7 +39,6 @@ private:
     uint64_t max_load_sum_;
     uint64_t loads_sum_[NLoadsMax];
     int      governor_cnt_;
-    int      cluster_num_;
 };
 
 inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const {

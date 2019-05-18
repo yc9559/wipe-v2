@@ -84,9 +84,17 @@ uint32_t CalcLoadAvgMax(uint32_t decay_ratio) {
 }
 
 #define TICK_MS 10
-PeltHmp::PeltHmp(Cfg cfg) : Hmp(cfg), tunables_(cfg.tunables), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {
-    up_demand_thd_   = tunables_.up_threshold;
-    down_demand_thd_ = tunables_.down_threshold;
+PeltHmp::PeltHmp(Cfg cfg)
+    : Hmp(cfg),
+      tunables_(cfg.tunables),
+      demand_(0),
+      up_demand_thd_(cfg.tunables.up_threshold),
+      down_demand_thd_(cfg.tunables.down_threshold),
+      entry_cnt_(0),
+      max_load_sum_(0),
+      decay_ratio_(0),
+      load_avg_max_(0),
+      governor_cnt_(0) {
     InitDecay(TICK_MS, tunables_.load_avg_period_ms);
 }
 
@@ -100,7 +108,7 @@ void PeltHmp::InitDecay(int ms, int n) {
 // 注意这个使用率不考虑当前集群的频率和IPC，仅与CPU忙时间有关
 // 同样的负载，在容量较高的核心上使用率会低一些，在容量较低的核心上使用率会高一些
 uint64_t PeltHmp::UpdateBusyTime(int max_load) {
-    // 转换到负载百分比，映射到0~1023
+    // 转换到负载百分比，映射到0~1024
     uint64_t now = LoadToBusyPct(active_, max_load) * THRESHOLD_SCALE / 100;
     // 衰减之前的负载，加上新的，如果是持续稳定负载类似于等比数列求和
     demand_ = now + mul_u64_u32_shr(demand_, decay_ratio_, 32);

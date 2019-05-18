@@ -34,7 +34,6 @@ private:
     uint32_t decay_ratio_;
     uint32_t load_avg_max_;
     int      governor_cnt_;
-    int      cluster_num_;
 };
 
 #endif

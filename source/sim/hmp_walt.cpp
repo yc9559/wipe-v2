@@ -4,7 +4,8 @@
 #include <iostream>
 #include <numeric>
 
-WaltHmp::WaltHmp(Cfg cfg) : Hmp(cfg), tunables_(cfg.tunables), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {
+WaltHmp::WaltHmp(Cfg cfg)
+    : Hmp(cfg), tunables_(cfg.tunables), demand_(0), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {
     up_demand_thd_   = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_upmigrate;
     down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
     memset(sum_history_, 0, sizeof(sum_history_));

@@ -25,7 +25,7 @@ Soc::Soc(const std::string &model_file) {
     // 使用的调度器类型
     if (j["sched"] == "walt")
         sched_type_ = kWalt;
-    else if (j["sched"] == "walt")
+    else if (j["sched"] == "pelt")
         sched_type_ = kPelt;
     else
         sched_type_ = kLegacy;
