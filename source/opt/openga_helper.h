@@ -106,17 +106,17 @@ private:
     void InitDefaultPowersum();
     void ParseCfgFile(const std::string &ga_cfg_file);
 
-    Soc *              soc_;
-    const Workload *   workload_;
-    const Workload *   idleload_;
-    Rank::Score        default_score_;
-    int                param_len_;
-    ParamDesc          param_desc_;
-    GaCfg              ga_cfg_;
-    MiscConst          misc_;
+    Soc *           soc_;
+    const Workload *workload_;
+    const Workload *idleload_;
+    Rank::Score     default_score_;
+    int             param_len_;
+    ParamDesc       param_desc_;
+    GaCfg           ga_cfg_;
+    MiscConst       misc_;
 
     typename SimType::MiscConst sim_misc_;
-    Rank::MiscConst    rank_misc_;
+    Rank::MiscConst             rank_misc_;
 };
 
 #endif

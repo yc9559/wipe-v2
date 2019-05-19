@@ -11,6 +11,7 @@
         "./dataset/soc_model/model_sdm626.json",
         "./dataset/soc_model/model_sdm636.json",
         "./dataset/soc_model/model_sd650_652_653.json",
+        "./dataset/soc_model/model_sd616.json",
         "./dataset/soc_model/model_e8895.json",
         "./dataset/soc_model/model_e8890.json",
         "./dataset/soc_model/model_e7420.json"
