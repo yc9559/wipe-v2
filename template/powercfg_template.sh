@@ -77,8 +77,10 @@ check_value()
             # input_boost_freq has a additional line break
             case1=$(echo "${actual}" | grep "${expected}")
             # Actual scaling_min_freq is 633600, but given is 633000. That's OK
-            case2=$(echo "${2}" | grep "scaling_m")
-            if [ "${case1}" == "" ] && [ "${case2}" == "" ]; then
+            case2=$(echo "${2}" | grep -E "scaling_m.{2}_freq$")
+            # skip msm_performance/parameters: cpu_min_freq and cpu_max_freq
+            case3=$(echo "${2}" | grep -E "cpu_m.{2}_freq$")
+            if [ "${case1}" == "" ] && [ "${case2}" == "" ] && [ "${case3}" == "" ]; then
                 NOT_MATCH_NUM=$(expr ${NOT_MATCH_NUM} + 1)
                 echo "[FAIL] ${2}"
                 echo "expected: ${expected}"
