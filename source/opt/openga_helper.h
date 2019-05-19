@@ -33,6 +33,7 @@ typedef struct _ParamDescCfg {
     ParamDescElement sched_freq_aggregate_threshold_pct;
     ParamDescElement sched_ravg_hist_size;
     ParamDescElement sched_window_stats_policy;
+    ParamDescElement sched_boost;
     ParamDescElement timer_rate;
     ParamDescElement input_duration;
     ParamDescElement load_avg_period_ms;

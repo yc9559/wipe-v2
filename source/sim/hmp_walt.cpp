@@ -88,6 +88,11 @@ int WaltHmp::SchedulerTick(int max_load, const int *loads, int n_load, int now) 
             ;
         }
 
+        if (tunables_.sched_boost) {
+            active_ = big_;
+            idle_   = little_;
+        }
+
         idle_->busy_pct_   = 0;
         active_->busy_pct_ = AggregateLoadToBusyPctIfNeed(loads_avg, n_load);
 

@@ -75,6 +75,7 @@ void OpengaAdapter<SimType>::ParseCfgFile(const std::string &ga_cfg_file) {
     desc_cfg.sched_freq_aggregate_threshold_pct = get_range("sched_freq_aggregate_threshold_pct");
     desc_cfg.sched_ravg_hist_size               = get_range("sched_ravg_hist_size");
     desc_cfg.sched_window_stats_policy          = get_range("sched_window_stats_policy");
+    desc_cfg.sched_boost                        = get_range("sched_boost");
     desc_cfg.timer_rate                         = get_range("timer_rate");
     desc_cfg.input_duration                     = get_range("input_duration");
     desc_cfg.load_avg_period_ms                 = get_range("load_avg_period_ms");
@@ -339,6 +340,7 @@ typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const P
     t.sched.sched_freq_aggregate_threshold_pct = QuatLargeParam(*it_seq++, 25, *it_desc++);
     t.sched.sched_ravg_hist_size               = Quantify(*it_seq++, *it_desc++);
     t.sched.sched_window_stats_policy          = Quantify(*it_seq++, *it_desc++);
+    t.sched.sched_boost                        = Quantify(*it_seq++, *it_desc++);
     t.sched.timer_rate                         = Quantify(*it_seq++, *it_desc++);
 
     // 输入升频参数上下限
@@ -403,6 +405,7 @@ void OpengaAdapter<SimQcomBL>::InitParamDesc(const ParamDescCfg &p) {
     param_desc_.push_back(p.sched_freq_aggregate_threshold_pct);
     param_desc_.push_back(p.sched_ravg_hist_size);
     param_desc_.push_back(p.sched_window_stats_policy);
+    param_desc_.push_back(p.sched_boost);
     param_desc_.push_back(p.timer_rate);
 
     // 输入升频参数上下限
@@ -445,6 +448,7 @@ SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) cons
     t.sched.sched_freq_aggregate_threshold_pct = 1000;
     t.sched.sched_ravg_hist_size               = 5;
     t.sched.sched_window_stats_policy          = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
+    t.sched.sched_boost                        = 0;
     t.sched.timer_rate                         = 2;
 
     // 输入升频参数上下限

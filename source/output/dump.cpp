@@ -262,6 +262,7 @@ std::string Dumper<SimQcomBL>::SimTunableToStr(const SimQcomBL::Tunables &t) con
     buf << "sched_freq_aggregate_threshold_pct: " << t.sched.sched_freq_aggregate_threshold_pct << endl;
     buf << "sched_ravg_hist_size: " << t.sched.sched_ravg_hist_size << endl;
     buf << "sched_window_stats_policy: " << t.sched.sched_window_stats_policy << endl;
+    buf << "sched_boost: " << t.sched.sched_boost << endl;
     buf << "timer_rate: " << Ms2Us(Quantum2Ms(t.sched.timer_rate)) << endl;
     buf << endl;
 
@@ -391,12 +392,12 @@ std::string Dumper<SimQcomBL>::LevelToStr(const SimQcomBL::Tunables &t, int leve
     append_val(t.sched.sched_ravg_hist_size);
     // append_hmp_param("sched_window_stats_policy");
     append_val(t.sched.sched_window_stats_policy);
+    // append_hmp_param("sched_boost");
+    append_val(t.sched.sched_boost);
     // append_hmp_param("sched_spill_load");
     append_val(90);
     // append_hmp_param("sched_restrict_cluster_spill");
     append_val(1);
-    // append_hmp_param("sched_boost");
-    append_val(0);
     // append_hmp_param("sched_prefer_sync_wakee_to_waker");
     append_val(1);
     // append_hmp_param("sched_freq_inc_notify");
@@ -461,8 +462,8 @@ std::string Dumper<SimQcomBL>::SysfsObjToStr(void) {
     };
 
     // 高通平台的最低最高频率限制接口
-        buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_min_freq\"" << endl;
-        buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_max_freq\"" << endl;
+    buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_min_freq\"" << endl;
+    buf << prefix << ++n << "=\"/sys/module/msm_performance/parameters/cpu_max_freq\"" << endl;
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
         // 核心上线
@@ -496,9 +497,9 @@ std::string Dumper<SimQcomBL>::SysfsObjToStr(void) {
     append_hmp_param("sched_freq_aggregate");
     append_hmp_param("sched_ravg_hist_size");
     append_hmp_param("sched_window_stats_policy");
+    append_hmp_param("sched_boost");
     append_hmp_param("sched_spill_load");
     append_hmp_param("sched_restrict_cluster_spill");
-    append_hmp_param("sched_boost");
     append_hmp_param("sched_prefer_sync_wakee_to_waker");
     append_hmp_param("sched_freq_inc_notify");
     append_hmp_param("sched_freq_dec_notify");

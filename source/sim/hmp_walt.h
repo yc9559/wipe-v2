@@ -14,6 +14,7 @@ public:
         int sched_ravg_hist_size;
         int sched_window_stats_policy;
         int sched_freq_aggregate_threshold_pct;
+        int sched_boost;
     };
 
     struct Cfg : public HmpCfg {
