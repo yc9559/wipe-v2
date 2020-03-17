@@ -4,8 +4,8 @@
 # Platform: [platform_name]
 # Generated at: [generated_time]
 
-CUR_LEVEL_FILE="/dev/.wipe_cur_level"
-PARAM_BAK_FILE="/dev/.wipe_param_bak"
+CUR_LEVEL_FILE="/cache/.wipe_cur_level"
+PARAM_BAK_FILE="/cache/.wipe_param_bak"
 
 # const variables
 PARAM_NUM=[param_num]
