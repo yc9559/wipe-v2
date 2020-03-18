@@ -31,7 +31,7 @@ Workload::Workload(const std::string &workload_file) {
         throw runtime_error("windowedLoad is empty");
     }
 
-    auto loadpct_to_demand = [=](int load) { return freq_ * efficiency_ * load; };
+    auto loadpct_to_demand = [=](int load) { return kWorkloadScaleFactor * freq_ * efficiency_ * load; };
     
     windowed_load_.reserve(j["windowedLoad"].size());
     for (const auto &slice : j["windowedLoad"]) {

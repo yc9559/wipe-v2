@@ -2,6 +2,7 @@
 #define __WORKLOAD_H
 
 #include <stdint.h>
+
 #include <string>
 #include <vector>
 
@@ -21,6 +22,7 @@ public:
 
     Workload(const std::string &workload_file);
 
+    const float              kWorkloadScaleFactor = 1.15;
     std::vector<LoadSlice>   windowed_load_;
     std::vector<RenderSlice> render_load_;
     std::vector<std::string> src_;
