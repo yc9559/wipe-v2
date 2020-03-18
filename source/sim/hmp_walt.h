@@ -13,7 +13,6 @@ public:
         int sched_downmigrate;
         int sched_ravg_hist_size;
         int sched_window_stats_policy;
-        int sched_freq_aggregate_threshold_pct;
         int sched_boost;
     };
 
@@ -29,7 +28,6 @@ private:
 #define RavgHistSizeMax 5
 
     void update_history(int in_demand);
-    int  AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const;
 
     Tunables tunables_;
     uint64_t demand_;
@@ -41,18 +39,5 @@ private:
     uint64_t loads_sum_[NLoadsMax];
     int      governor_cnt_;
 };
-
-inline int WaltHmp::AggregateLoadToBusyPctIfNeed(const int *loads, int n_load) const {
-    uint64_t aggregated_load = 0;
-    for (int i = 0; i < active_->model_.core_num; ++i) {
-        aggregated_load += loads[i];
-    }
-    int aggregated_busy_pct = LoadToBusyPct(active_, aggregated_load);
-    if (aggregated_busy_pct > tunables_.sched_freq_aggregate_threshold_pct) {
-        return aggregated_busy_pct;
-    } else {
-        return LoadToBusyPct(active_, demand_);
-    }
-}
 
 #endif

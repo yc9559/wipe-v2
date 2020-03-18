@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+
 #include "cpumodel.h"
 #include "hmp_pelt.h"
 #include "hmp_walt.h"
@@ -30,7 +31,6 @@ typedef struct _ParamDescCfg {
     ParamDescElement target_loads;
     ParamDescElement sched_downmigrate;
     ParamDescElement sched_upmigrate;
-    ParamDescElement sched_freq_aggregate_threshold_pct;
     ParamDescElement sched_ravg_hist_size;
     ParamDescElement sched_window_stats_policy;
     ParamDescElement sched_boost;

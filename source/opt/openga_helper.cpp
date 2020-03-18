@@ -1,7 +1,9 @@
 #include "openga_helper.h"
+
 #include <algorithm>
 #include <fstream>
 #include <functional>
+
 #include "interactive.h"
 #include "json.hpp"
 
@@ -65,23 +67,22 @@ void OpengaAdapter<SimType>::ParseCfgFile(const std::string &ga_cfg_file) {
         return el;
     };
 
-    desc_cfg.above_hispeed_delay                = get_range("above_hispeed_delay");
-    desc_cfg.go_hispeed_load                    = get_range("go_hispeed_load");
-    desc_cfg.max_freq_hysteresis                = get_range("max_freq_hysteresis");
-    desc_cfg.min_sample_time                    = get_range("min_sample_time");
-    desc_cfg.target_loads                       = get_range("target_loads");
-    desc_cfg.sched_downmigrate                  = get_range("sched_downmigrate");
-    desc_cfg.sched_upmigrate                    = get_range("sched_upmigrate");
-    desc_cfg.sched_freq_aggregate_threshold_pct = get_range("sched_freq_aggregate_threshold_pct");
-    desc_cfg.sched_ravg_hist_size               = get_range("sched_ravg_hist_size");
-    desc_cfg.sched_window_stats_policy          = get_range("sched_window_stats_policy");
-    desc_cfg.sched_boost                        = get_range("sched_boost");
-    desc_cfg.timer_rate                         = get_range("timer_rate");
-    desc_cfg.input_duration                     = get_range("input_duration");
-    desc_cfg.load_avg_period_ms                 = get_range("load_avg_period_ms");
-    desc_cfg.down_threshold                     = get_range("down_threshold");
-    desc_cfg.up_threshold                       = get_range("up_threshold");
-    desc_cfg.boost                              = get_range("boost");
+    desc_cfg.above_hispeed_delay       = get_range("above_hispeed_delay");
+    desc_cfg.go_hispeed_load           = get_range("go_hispeed_load");
+    desc_cfg.max_freq_hysteresis       = get_range("max_freq_hysteresis");
+    desc_cfg.min_sample_time           = get_range("min_sample_time");
+    desc_cfg.target_loads              = get_range("target_loads");
+    desc_cfg.sched_downmigrate         = get_range("sched_downmigrate");
+    desc_cfg.sched_upmigrate           = get_range("sched_upmigrate");
+    desc_cfg.sched_ravg_hist_size      = get_range("sched_ravg_hist_size");
+    desc_cfg.sched_window_stats_policy = get_range("sched_window_stats_policy");
+    desc_cfg.sched_boost               = get_range("sched_boost");
+    desc_cfg.timer_rate                = get_range("timer_rate");
+    desc_cfg.input_duration            = get_range("input_duration");
+    desc_cfg.load_avg_period_ms        = get_range("load_avg_period_ms");
+    desc_cfg.down_threshold            = get_range("down_threshold");
+    desc_cfg.up_threshold              = get_range("up_threshold");
+    desc_cfg.boost                     = get_range("boost");
 
     InitParamDesc(desc_cfg);
 }
@@ -334,14 +335,13 @@ typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const P
     }
 
     // WALT HMP 调速器参数上下限
-    t.sched.sched_downmigrate                  = QuatLoadParam(*it_seq++, *it_desc++);
-    t.sched.sched_upmigrate                    = QuatLoadParam(*it_seq++, *it_desc++);
-    t.sched.sched_upmigrate                    = std::max(t.sched.sched_downmigrate, t.sched.sched_upmigrate);
-    t.sched.sched_freq_aggregate_threshold_pct = QuatLargeParam(*it_seq++, 25, *it_desc++);
-    t.sched.sched_ravg_hist_size               = Quantify(*it_seq++, *it_desc++);
-    t.sched.sched_window_stats_policy          = Quantify(*it_seq++, *it_desc++);
-    t.sched.sched_boost                        = Quantify(*it_seq++, *it_desc++);
-    t.sched.timer_rate                         = Quantify(*it_seq++, *it_desc++);
+    t.sched.sched_downmigrate         = QuatLoadParam(*it_seq++, *it_desc++);
+    t.sched.sched_upmigrate           = QuatLoadParam(*it_seq++, *it_desc++);
+    t.sched.sched_upmigrate           = std::max(t.sched.sched_downmigrate, t.sched.sched_upmigrate);
+    t.sched.sched_ravg_hist_size      = Quantify(*it_seq++, *it_desc++);
+    t.sched.sched_window_stats_policy = Quantify(*it_seq++, *it_desc++);
+    t.sched.sched_boost               = Quantify(*it_seq++, *it_desc++);
+    t.sched.timer_rate                = Quantify(*it_seq++, *it_desc++);
 
     // 输入升频参数上下限
     idx = 0;
@@ -402,7 +402,6 @@ void OpengaAdapter<SimQcomBL>::InitParamDesc(const ParamDescCfg &p) {
     // WALT HMP 调速器参数上下限
     param_desc_.push_back(p.sched_downmigrate);
     param_desc_.push_back(p.sched_upmigrate);
-    param_desc_.push_back(p.sched_freq_aggregate_threshold_pct);
     param_desc_.push_back(p.sched_ravg_hist_size);
     param_desc_.push_back(p.sched_window_stats_policy);
     param_desc_.push_back(p.sched_boost);
@@ -443,13 +442,12 @@ SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) cons
     }
 
     // WALT HMP 调速器参数上下限
-    t.sched.sched_downmigrate                  = 85;
-    t.sched.sched_upmigrate                    = 95;
-    t.sched.sched_freq_aggregate_threshold_pct = 1000;
-    t.sched.sched_ravg_hist_size               = 5;
-    t.sched.sched_window_stats_policy          = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
-    t.sched.sched_boost                        = 0;
-    t.sched.timer_rate                         = 2;
+    t.sched.sched_downmigrate         = 85;
+    t.sched.sched_upmigrate           = 95;
+    t.sched.sched_ravg_hist_size      = 5;
+    t.sched.sched_window_stats_policy = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
+    t.sched.sched_boost               = 0;
+    t.sched.timer_rate                = 2;
 
     // 输入升频参数上下限
     idx = 0;

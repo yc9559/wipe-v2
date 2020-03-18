@@ -1,7 +1,9 @@
 #include "dump.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <chrono>
 #include <fstream>
 #include <iomanip>
@@ -259,7 +261,6 @@ std::string Dumper<SimQcomBL>::SimTunableToStr(const SimQcomBL::Tunables &t) con
     buf << "[hmp sched]" << endl << endl;
     buf << "sched_downmigrate: " << t.sched.sched_downmigrate << endl;
     buf << "sched_upmigrate: " << t.sched.sched_upmigrate << endl;
-    buf << "sched_freq_aggregate_threshold_pct: " << t.sched.sched_freq_aggregate_threshold_pct << endl;
     buf << "sched_ravg_hist_size: " << t.sched.sched_ravg_hist_size << endl;
     buf << "sched_window_stats_policy: " << t.sched.sched_window_stats_policy << endl;
     buf << "sched_boost: " << t.sched.sched_boost << endl;
@@ -386,8 +387,6 @@ std::string Dumper<SimQcomBL>::LevelToStr(const SimQcomBL::Tunables &t, int leve
     append_val(t.sched.sched_upmigrate);
     // append_hmp_param("sched_downmigrate");
     append_val(t.sched.sched_downmigrate);
-    // append_hmp_param("sched_freq_aggregate");
-    append_val(0);
     // append_hmp_param("sched_ravg_hist_size");
     append_val(t.sched.sched_ravg_hist_size);
     // append_hmp_param("sched_window_stats_policy");
@@ -494,7 +493,6 @@ std::string Dumper<SimQcomBL>::SysfsObjToStr(void) {
     append_hmp_param("sched_downmigrate");
     append_hmp_param("sched_upmigrate");
     append_hmp_param("sched_downmigrate");
-    append_hmp_param("sched_freq_aggregate");
     append_hmp_param("sched_ravg_hist_size");
     append_hmp_param("sched_window_stats_policy");
     append_hmp_param("sched_boost");
