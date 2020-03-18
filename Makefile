@@ -13,7 +13,7 @@ BUILD_DIR	:= ./build
 DEP_DIR		:= $(BUILD_DIR)/dep
 
 BIN_NAME	:= wipe
-REL_FLAGS	:= -O3
+REL_FLAGS	:= -O3 -s
 REL_DEFINES	:= 
 DBG_FLAGS	:= -O0 -g -Wall
 DBG_DEFINES	:= 
