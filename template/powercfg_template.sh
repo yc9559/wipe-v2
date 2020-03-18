@@ -52,8 +52,6 @@ lock_value()
 # $1:level_number
 apply_level() 
 {
-	# 0. SELinux permissive
-	setenforce 0
     # 1. backup
     backup_default
     # 2. apply modification
