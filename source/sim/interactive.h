@@ -2,6 +2,7 @@
 #define __INTERACTIVE_H
 
 #include <stdint.h>
+
 #include "cpumodel.h"
 
 const int kInteractiveParamFixedLen = 4;
@@ -42,9 +43,9 @@ private:
     int freq_to_above_hispeed_delay(int freq) const;
     int choose_freq(int freq, int load) const;
 
+    Tunables       tunables_;
     const Cluster *cluster_;
 
-    Tunables tunables_;
     int target_freq;
     int floor_freq;
     int max_freq_hyst_start_time;
