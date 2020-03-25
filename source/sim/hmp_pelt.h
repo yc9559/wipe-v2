@@ -21,6 +21,9 @@ public:
     PeltHmp(Cfg cfg);
     int SchedulerTick(int max_load, const int *loads, int n_load, int now);
 
+    Tunables GetTunables(void) { return tunables_; }
+    void     SetTunables(const Tunables &t) { tunables_ = t; }
+
 private:
     uint64_t UpdateBusyTime(int max_load);
     void     InitDecay(int ms, int n);

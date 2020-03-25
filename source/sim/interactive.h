@@ -34,14 +34,17 @@ public:
     int GetAboveHispeedDelayGearNum(void) const;
     int GetTargetLoadGearNum(void) const;
 
+    Tunables GetTunables(void) { return tunables_; }
+    void     SetTunables(const Tunables &t) { tunables_ = t; }
+
 private:
     int freq_to_targetload(int freq) const;
     int freq_to_above_hispeed_delay(int freq) const;
     int choose_freq(int freq, int load) const;
 
-    const Tunables tunables_;
     const Cluster *cluster_;
 
+    Tunables tunables_;
     int target_freq;
     int floor_freq;
     int max_freq_hyst_start_time;

@@ -24,6 +24,9 @@ public:
     WaltHmp(Cfg cfg);
     int SchedulerTick(int max_load, const int *loads, int n_load, int now);
 
+    Tunables GetTunables(void) { return tunables_; }
+    void     SetTunables(const Tunables &t) { tunables_ = t; }
+
 private:
 #define RavgHistSizeMax 5
 
