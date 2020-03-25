@@ -2,6 +2,7 @@
 #define __CPU_MODEL_H
 
 #include <stdint.h>
+
 #include <string>
 #include <vector>
 
@@ -22,7 +23,7 @@ public:
     } Model;
 
     Cluster(Model model);
-    int  FindIdxWithFreqFloor(int freq, int start_idx) const;
+    int  FindFreqIdx(int freq, int left, int right) const;
     int  freq_floor_to_idx(int freq) const;
     int  freq_ceiling_to_idx(int freq) const;
     int  freq_floor_to_opp(int freq) const;
@@ -30,6 +31,7 @@ public:
     int  CalcPower(const int *load_pcts) const;
     int  CalcCapacity(void) const;
     void SetMinfreq(int freq);
+    void SetMaxfreq(int freq);
     void SetCurfreq(int freq);
 
     const Model model_;
@@ -38,57 +40,63 @@ public:
 
 private:
     Cluster();
+    int GetOpp(int idx) const;
     int min_opp_idx_;
+    int max_opp_idx_;
     int cur_opp_idx_;
 };
 
-// 从start_idx开始，找到 >=@freq的最低频点对应的opp频点序号
-inline int Cluster::FindIdxWithFreqFloor(int freq, int start_idx) const {
-    uint32_t i       = start_idx;
-    uint32_t uplimit = model_.opp_model.size() - 1;
+inline int Cluster::GetOpp(int idx) const {
+    return model_.opp_model[idx].freq;
+}
+
+// 在给定下标闭区间内，找到 >=@freq的最低频点对应的opp频点序号
+inline int Cluster::FindFreqIdx(int freq, int left, int right) const {
+    left  = (left == -1) ? 0 : left;
+    right = (right == -1) ? (model_.opp_model.size() - 1) : right;
+    int i = left;
     // 第1-n个频点，到达第n或者当前频点>=要寻找的即可跳出
-    for (; i < uplimit && model_.opp_model[i].freq < freq; ++i)
+    for (; i < right && GetOpp(i) < freq; ++i)
         ;
     return i;
 }
 
-// 从设定的最低频开始，找到 >=@freq的最低频点对应的opp频点序号
+// 在最低最高频率范围内，找到 >=@freq的最低频点对应的opp频点序号
 inline int Cluster::freq_floor_to_idx(int freq) const {
-    return FindIdxWithFreqFloor(freq, min_opp_idx_);
+    return FindFreqIdx(freq, min_opp_idx_, max_opp_idx_);
 }
 
-// 从设定的最低频开始，找到 <=@freq的最大频点对应的opp频点序号
+// 在最低最高频率范围内，找到 <=@freq的最大频点对应的opp频点序号
 inline int Cluster::freq_ceiling_to_idx(int freq) const {
-    uint32_t i = min_opp_idx_ + 1;
-    // 第2-n个频点，到达第n+1或者当前频点>要寻找的即可跳出
-    for (; i < model_.opp_model.size() && model_.opp_model[i].freq <= freq; ++i)
-        ;
-    // 取该频点左边那个，使得频点范围落在第1-n，左边频点<=要寻找的
-    return (i - 1);
+    int i = FindFreqIdx(freq, min_opp_idx_, max_opp_idx_);
+    return (i > 0 && GetOpp(i) > freq) ? (i - 1) : i;
 }
 
-// 从设定的最低频开始，找到 >=@freq的最低频点
+// 在最低最高频率范围内，找到 >=@freq的最低频点
 inline int Cluster::freq_floor_to_opp(int freq) const {
-    return model_.opp_model[freq_floor_to_idx(freq)].freq;
+    return GetOpp(freq_floor_to_idx(freq));
 }
 
-// 从设定的最低频开始，找到 <=@freq的最大频点
+// 在最低最高频率范围内，找到 <=@freq的最大频点
 inline int Cluster::freq_ceiling_to_opp(int freq) const {
-    return model_.opp_model[freq_ceiling_to_idx(freq)].freq;
+    return GetOpp(freq_ceiling_to_idx(freq));
 }
 
 inline void Cluster::SetMinfreq(int freq) {
-    min_opp_idx_ = FindIdxWithFreqFloor(freq, 0);
-    if (cur_freq_ < freq) {
+    min_opp_idx_ = FindFreqIdx(freq, -1, -1);
+    if (cur_freq_ < freq)
         SetCurfreq(freq);
-    }
-    return;
+}
+
+inline void Cluster::SetMaxfreq(int freq) {
+    max_opp_idx_ = FindFreqIdx(freq, -1, -1);
+    if (cur_freq_ > freq)
+        SetCurfreq(freq);
 }
 
 inline void Cluster::SetCurfreq(int freq) {
     cur_opp_idx_ = freq_floor_to_idx(freq);
-    cur_freq_    = model_.opp_model[cur_opp_idx_].freq;
-    return;
+    cur_freq_    = GetOpp(cur_opp_idx_);
 }
 
 // 耗电量 = 功耗(mw) * 占用率(最大100)

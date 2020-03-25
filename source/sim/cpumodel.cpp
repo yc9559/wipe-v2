@@ -1,13 +1,14 @@
 #include "cpumodel.h"
+
 #include <fstream>
 #include <iostream>
+
 #include "json.hpp"
 
 Cluster::Cluster(Model model) : model_(model) {
-    busy_pct_    = 0;
-    min_opp_idx_ = 0;
-    cur_opp_idx_ = 0;
+    busy_pct_ = 0;
     SetMinfreq(model.min_freq);
+    SetMaxfreq(model.max_freq);
     SetCurfreq(model.max_freq);
 }
 

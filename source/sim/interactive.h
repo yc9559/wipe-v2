@@ -53,11 +53,11 @@ private:
 };
 
 inline int Interactive::freq_to_targetload(int freq) const {
-    return tunables_.target_loads[std::min(TARGET_LOAD_MAX_LEN - 1, cluster_->FindIdxWithFreqFloor(freq, 0))];
+    return tunables_.target_loads[std::min(TARGET_LOAD_MAX_LEN - 1, cluster_->FindFreqIdx(freq, -1, -1))];
 }
 
 inline int Interactive::freq_to_above_hispeed_delay(int freq) const {
-    return tunables_.above_hispeed_delay[std::min(ABOVE_DELAY_MAX_LEN - 1, cluster_->FindIdxWithFreqFloor(freq, 0))];
+    return tunables_.above_hispeed_delay[std::min(ABOVE_DELAY_MAX_LEN - 1, cluster_->FindFreqIdx(freq, -1, -1))];
 }
 
 #endif
