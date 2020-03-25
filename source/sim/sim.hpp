@@ -66,7 +66,7 @@ public:
             capacity_log.push_back(capacity);
             power_log.push_back(base_pwr + sched.CalcPower(w.load));
 
-            boost.HandleInput(soc, w.has_input_event, quantum_cnt);
+            boost.HandleInput(soc, little_governor, big_governor, sched, w.has_input_event, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, workload.core_num_, quantum_cnt);
             quantum_cnt++;
         }
@@ -78,7 +78,7 @@ public:
             AdaptLoad(w.load, idleload.core_num_, capacity);
             rp->offscreen_pwr += sched.CalcPowerForIdle(w.load);
 
-            boost.HandleInput(soc, w.has_input_event, quantum_cnt);
+            boost.HandleInput(soc, little_governor, big_governor, sched, w.has_input_event, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, idleload.core_num_, quantum_cnt);
             quantum_cnt++;
         }

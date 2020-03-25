@@ -15,8 +15,8 @@
 #include "sim_types.h"
 #include "workload.h"
 
-typedef Sim<Interactive, WaltHmp, InputBoost> SimQcomBL;
-typedef Sim<Interactive, PeltHmp, InputBoost> SimBL;
+typedef Sim<Interactive, WaltHmp, TouchBoost> SimQcomBL;
+typedef Sim<Interactive, PeltHmp, TouchBoost> SimBL;
 
 typedef struct _ParamDescElement {
     int range_start;
