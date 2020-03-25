@@ -46,6 +46,7 @@ public:
     typedef struct _Tunables : public InputBoost::Tunables {
         int boost_freq[2];
         _Tunables() : boost_freq{0, 0} {}
+        _Tunables(const Soc *soc);
     } Tunables;
 
     TouchBoost() : tunables_() {}

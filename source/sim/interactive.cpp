@@ -1,8 +1,27 @@
 #include "interactive.h"
+
 #include <algorithm>
 extern "C" {
 #include <limits.h>
 #include <stdbool.h>
+}
+
+Interactive::Tunables::_InteractiveTunables(const Cluster &cm) {
+    hispeed_freq        = cm.freq_floor_to_opp(cm.model_.max_freq * 0.6);
+    go_hispeed_load     = 90;
+    min_sample_time     = 1;
+    max_freq_hysteresis = 2;
+
+    int n_opp         = cm.model_.opp_model.size();
+    int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+    int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+
+    for (int i = 0; i < n_above; ++i) {
+        above_hispeed_delay[i] = 1;
+    }
+    for (int i = 0; i < n_targetloads; ++i) {
+        target_loads[i] = 90;
+    }
 }
 
 int Interactive::choose_freq(int freq, int load) const {

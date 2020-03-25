@@ -1,8 +1,19 @@
 #include "hmp_walt.h"
+
 #include <string.h>
+
 #include <algorithm>
 #include <iostream>
 #include <numeric>
+
+WaltHmp::Tunables::Tunables() {
+    sched_downmigrate         = 85;
+    sched_upmigrate           = 95;
+    sched_ravg_hist_size      = 5;
+    sched_window_stats_policy = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
+    sched_boost               = 0;
+    timer_rate                = 2;
+}
 
 WaltHmp::WaltHmp(Cfg cfg)
     : Hmp(cfg), tunables_(cfg.tunables), demand_(0), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {

@@ -11,6 +11,7 @@ public:
         int up_threshold;
         int boost;
         int timer_rate;
+        Tunables();
     };
 
     struct Cfg : public HmpCfg {

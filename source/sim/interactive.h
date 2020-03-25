@@ -11,14 +11,15 @@ const int kInteractiveParamFixedLen = 4;
 
 class Interactive {
 public:
-    // 64Byte，与CPU缓存对齐
-    typedef struct alignas(1) _InteractiveTunables {
+    typedef struct _InteractiveTunables {
         int      hispeed_freq;
         uint16_t go_hispeed_load;
         uint8_t  min_sample_time;
         uint8_t  max_freq_hysteresis;
         uint8_t  above_hispeed_delay[ABOVE_DELAY_MAX_LEN];
         uint8_t  target_loads[TARGET_LOAD_MAX_LEN];
+        _InteractiveTunables(const Cluster &cm);
+        _InteractiveTunables() {}
     } Tunables;
 
     Interactive() = delete;

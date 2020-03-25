@@ -1,5 +1,7 @@
 #include "hmp_pelt.h"
+
 #include <string.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -81,6 +83,14 @@ uint32_t CalcLoadAvgMax(uint32_t decay_ratio) {
         max  = 1024 + mul_u64_u32_shr(max, decay_ratio, 32);
     }
     return max;
+}
+
+PeltHmp::Tunables::Tunables() {
+    down_threshold     = 480;
+    up_threshold       = 640;
+    load_avg_period_ms = 128;
+    boost              = 0;
+    timer_rate         = 2;
 }
 
 #define TICK_MS 10

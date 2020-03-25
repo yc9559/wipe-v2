@@ -423,41 +423,15 @@ SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) cons
     // interactive 调速器参数上下限
     int idx = 0;
     for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx].hispeed_freq        = cluster.freq_floor_to_opp(cluster.model_.max_freq * 0.6);
-        t.governor[idx].go_hispeed_load     = 90;
-        t.governor[idx].min_sample_time     = 1;
-        t.governor[idx].max_freq_hysteresis = 2;
-
-        int n_opp         = cluster.model_.opp_model.size();
-        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            t.governor[idx].above_hispeed_delay[i] = 1;
-        }
-        for (int i = 0; i < n_targetloads; ++i) {
-            t.governor[idx].target_loads[i] = 90;
-        }
-        idx++;
+        t.governor[idx++] = Interactive::Tunables(cluster);
     }
 
     // WALT HMP 调速器参数上下限
-    t.sched.sched_downmigrate         = 85;
-    t.sched.sched_upmigrate           = 95;
-    t.sched.sched_ravg_hist_size      = 5;
-    t.sched.sched_window_stats_policy = WaltHmp::WINDOW_STATS_MAX_RECENT_AVG;
-    t.sched.sched_boost               = 0;
-    t.sched.timer_rate                = 2;
+    t.sched = WaltHmp::Tunables();
 
     // 输入升频参数上下限
-    idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.boost.boost_freq[idx] = cluster.freq_floor_to_opp(cluster.model_.max_freq * 0.6);
-        idx++;
-    }
-    if (soc_->clusters_.size() > 1)
-        t.boost.boost_freq[1] = soc_->clusters_[1].model_.min_freq;
-    t.boost.duration_quantum = 100;
+    t.boost = TouchBoost::Tunables(soc_);
+
     return t;
 }
 
@@ -571,40 +545,15 @@ SimBL::Tunables OpengaAdapter<SimBL>::GenerateDefaultTunables(void) const {
     // interactive 调速器参数上下限
     int idx = 0;
     for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx].hispeed_freq        = cluster.freq_floor_to_opp(cluster.model_.max_freq * 0.6);
-        t.governor[idx].go_hispeed_load     = 90;
-        t.governor[idx].min_sample_time     = 1;
-        t.governor[idx].max_freq_hysteresis = 2;
-
-        int n_opp         = cluster.model_.opp_model.size();
-        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            t.governor[idx].above_hispeed_delay[i] = 1;
-        }
-        for (int i = 0; i < n_targetloads; ++i) {
-            t.governor[idx].target_loads[i] = 90;
-        }
-        idx++;
+        t.governor[idx++] = Interactive::Tunables(cluster);
     }
 
     // PELT HMP 调速器参数上下限
-    t.sched.down_threshold     = 480;
-    t.sched.up_threshold       = 640;
-    t.sched.load_avg_period_ms = 128;
-    t.sched.boost              = 0;
-    t.sched.timer_rate         = 2;
+    t.sched = PeltHmp::Tunables();
 
     // 输入升频参数上下限
-    idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.boost.boost_freq[idx] = cluster.freq_floor_to_opp(cluster.model_.max_freq * 0.6);
-        idx++;
-    }
-    if (soc_->clusters_.size() > 1)
-        t.boost.boost_freq[1] = soc_->clusters_[1].model_.min_freq;
-    t.boost.duration_quantum = 100;
+    t.boost = TouchBoost::Tunables(soc_);
+
     return t;
 }
 

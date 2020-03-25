@@ -14,6 +14,7 @@ public:
         int sched_ravg_hist_size;
         int sched_window_stats_policy;
         int sched_boost;
+        Tunables();
     };
 
     struct Cfg : public HmpCfg {
