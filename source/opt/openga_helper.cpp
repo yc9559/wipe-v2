@@ -98,8 +98,7 @@ void OpengaAdapter<SimType>::InitParamSeq(ParamSeq &p, const RandomFunc &rnd01) 
 // mutPolynomialBounded
 // Polynomial mutation as implemented in original NSGA-II algorithm in C by Deb.
 template <typename SimType>
-typename OpengaAdapter<SimType>::ParamSeq OpengaAdapter<SimType>::Mutate(const ParamSeq &  X_base,
-                                                                         const RandomFunc &rnd01, double shrink_scale) {
+ParamSeq OpengaAdapter<SimType>::Mutate(const ParamSeq &X_base, const RandomFunc &rnd01, double shrink_scale) {
     // 假设X1，X2等长
     const int    size    = X_base.size();
     const double eta     = ga_cfg_.eta;
@@ -135,8 +134,7 @@ typename OpengaAdapter<SimType>::ParamSeq OpengaAdapter<SimType>::Mutate(const P
 // Executes a simulated binary crossover that modify in-place the input individuals. The simulated binary crossover
 // expects :term:`sequence` individuals of floating point numbers
 template <typename SimType>
-typename OpengaAdapter<SimType>::ParamSeq OpengaAdapter<SimType>::Crossover(const ParamSeq &X1, const ParamSeq &X2,
-                                                                            const RandomFunc &rnd01) {
+ParamSeq OpengaAdapter<SimType>::Crossover(const ParamSeq &X1, const ParamSeq &X2, const RandomFunc &rnd01) {
     // 假设X1，X2等长
     const int    size  = X1.size();
     const double eta   = ga_cfg_.eta;
@@ -306,55 +304,149 @@ int QuatLargeParam(double ratio, int step, const ParamDescElement &desc) {
     return (Quantify(ratio, desc) / step) * step;
 }
 
+template <typename T>
+void DefineBlock(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    return;
+}
+
+template <typename T>
+T TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc, const Soc *soc) {
+    return T();
+}
+
 template <>
-typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const ParamSeq &p) const {
-    SimQcomBL::Tunables t;
-
-    ParamSeq::const_iterator  it_seq  = p.begin();
-    ParamDesc::const_iterator it_desc = param_desc_.begin();
-
-    // interactive 调速器参数上下限
-    int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx].hispeed_freq        = QuatFreqParam(*it_seq++, cluster, *it_desc++);
-        t.governor[idx].go_hispeed_load     = QuatLoadParam(*it_seq++, *it_desc++);
-        t.governor[idx].min_sample_time     = Quantify(*it_seq++, *it_desc++);
-        t.governor[idx].max_freq_hysteresis = Quantify(*it_seq++, *it_desc++);
+void DefineBlock<GovernorTs<Interactive>>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    for (const auto &cluster : soc->clusters_) {
+        ParamDescElement hispeed_freq_desc = {cluster.model_.min_freq, cluster.model_.max_freq};
+        desc.push_back(hispeed_freq_desc);
+        desc.push_back(p.go_hispeed_load);
+        desc.push_back(p.min_sample_time);
+        desc.push_back(p.max_freq_hysteresis);
 
         int n_opp         = cluster.model_.opp_model.size();
         int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
         int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
 
         for (int i = 0; i < n_above; ++i) {
-            t.governor[idx].above_hispeed_delay[i] = Quantify(*it_seq++, *it_desc++);
+            desc.push_back(p.above_hispeed_delay);
         }
         for (int i = 0; i < n_targetloads; ++i) {
-            t.governor[idx].target_loads[i] = QuatLoadParam(*it_seq++, *it_desc++);
+            desc.push_back(p.target_loads);
+        }
+    }
+}
+
+template <>
+GovernorTs<Interactive> TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+                                       const Soc *soc) {
+    GovernorTs<Interactive> t;
+
+    int idx = 0;
+    for (const auto &cluster : soc->clusters_) {
+        t.t[idx].hispeed_freq        = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+        t.t[idx].go_hispeed_load     = QuatLoadParam(*it_seq++, *it_desc++);
+        t.t[idx].min_sample_time     = Quantify(*it_seq++, *it_desc++);
+        t.t[idx].max_freq_hysteresis = Quantify(*it_seq++, *it_desc++);
+
+        int n_opp         = cluster.model_.opp_model.size();
+        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
+
+        for (int i = 0; i < n_above; ++i) {
+            t.t[idx].above_hispeed_delay[i] = Quantify(*it_seq++, *it_desc++);
+        }
+        for (int i = 0; i < n_targetloads; ++i) {
+            t.t[idx].target_loads[i] = QuatLoadParam(*it_seq++, *it_desc++);
         }
         idx++;
     }
 
-    // WALT HMP 调速器参数上下限
-    t.sched.sched_downmigrate         = QuatLoadParam(*it_seq++, *it_desc++);
-    t.sched.sched_upmigrate           = QuatLoadParam(*it_seq++, *it_desc++);
-    t.sched.sched_upmigrate           = std::max(t.sched.sched_downmigrate, t.sched.sched_upmigrate);
-    t.sched.sched_ravg_hist_size      = Quantify(*it_seq++, *it_desc++);
-    t.sched.sched_window_stats_policy = Quantify(*it_seq++, *it_desc++);
-    t.sched.sched_boost               = Quantify(*it_seq++, *it_desc++);
-    t.sched.timer_rate                = Quantify(*it_seq++, *it_desc++);
+    return std::move(t);
+}
 
-    // 输入升频参数上下限
-    idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.boost.boost_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
-        idx++;
+template <>
+void DefineBlock<WaltHmp::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    desc.push_back(p.sched_downmigrate);
+    desc.push_back(p.sched_upmigrate);
+    desc.push_back(p.sched_ravg_hist_size);
+    desc.push_back(p.sched_window_stats_policy);
+    desc.push_back(p.sched_boost);
+    desc.push_back(p.timer_rate);
+}
+
+template <>
+WaltHmp::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc, const Soc *soc) {
+    WaltHmp::Tunables t;
+    t.sched_downmigrate         = QuatLoadParam(*it_seq++, *it_desc++);
+    t.sched_upmigrate           = QuatLoadParam(*it_seq++, *it_desc++);
+    t.sched_upmigrate           = std::max(t.sched_downmigrate, t.sched_upmigrate);
+    t.sched_ravg_hist_size      = Quantify(*it_seq++, *it_desc++);
+    t.sched_window_stats_policy = Quantify(*it_seq++, *it_desc++);
+    t.sched_boost               = Quantify(*it_seq++, *it_desc++);
+    t.timer_rate                = Quantify(*it_seq++, *it_desc++);
+    return std::move(t);
+}
+
+template <>
+void DefineBlock<PeltHmp::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    desc.push_back(p.down_threshold);
+    desc.push_back(p.up_threshold);
+    desc.push_back(p.load_avg_period_ms);
+    desc.push_back(p.boost);
+    desc.push_back(p.timer_rate);
+}
+
+template <>
+PeltHmp::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc, const Soc *soc) {
+    PeltHmp::Tunables t;
+    t.down_threshold     = Quantify(*it_seq++, *it_desc++);
+    t.up_threshold       = Quantify(*it_seq++, *it_desc++);
+    t.up_threshold       = std::max(t.down_threshold, t.up_threshold);
+    t.load_avg_period_ms = Quantify(*it_seq++, *it_desc++);
+    t.boost              = Quantify(*it_seq++, *it_desc++);
+    t.timer_rate         = Quantify(*it_seq++, *it_desc++);
+    return std::move(t);
+}
+
+template <>
+void DefineBlock<TouchBoost::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    for (const auto &cluster : soc->clusters_) {
+        ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
+        desc.push_back(input_freq);
     }
-    t.boost.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
+    desc.push_back(p.input_duration);
+}
+
+template <>
+TouchBoost::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+                                    const Soc *soc) {
+    TouchBoost::Tunables t;
+
+    int idx = 0;
+    for (const auto &cluster : soc->clusters_)
+        t.boost_freq[idx++] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+    t.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
+
+    return std::move(t);
+}
+
+template <>
+typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const ParamSeq &p) const {
+    SimQcomBL::Tunables t;
+
+    ParamSeq::const_iterator  it_seq  = p.begin();
+    ParamDesc::const_iterator it_desc = param_desc_.begin();
+    // interactive 调速器参数上下限
+    t.governor = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc_);
+    // WALT HMP 调速器参数上下限
+    t.sched = TranslateBlock<WaltHmp::Tunables>(it_seq, it_desc, soc_);
+    // 输入升频参数上下限
+    t.boost = TranslateBlock<TouchBoost::Tunables>(it_seq, it_desc, soc_);
 
     // 时长类参数取整到一个timer_rate
-    idx = 0;
+    int idx = 0;
     for (const auto &cluster : soc_->clusters_) {
-        auto & tunable       = t.governor[idx];
+        auto & tunable       = t.governor.t[idx];
         double timer_quantum = t.sched.timer_rate;
 
         tunable.min_sample_time     = std::max(1.0, std::round(tunable.min_sample_time / timer_quantum));
@@ -380,39 +472,11 @@ typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const P
 template <>
 void OpengaAdapter<SimQcomBL>::InitParamDesc(const ParamDescCfg &p) {
     // interactive 调速器参数上下限
-    for (const auto &cluster : soc_->clusters_) {
-        ParamDescElement hispeed_freq_desc = {cluster.model_.min_freq, cluster.model_.max_freq};
-        param_desc_.push_back(hispeed_freq_desc);
-        param_desc_.push_back(p.go_hispeed_load);
-        param_desc_.push_back(p.min_sample_time);
-        param_desc_.push_back(p.max_freq_hysteresis);
-
-        int n_opp         = cluster.model_.opp_model.size();
-        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            param_desc_.push_back(p.above_hispeed_delay);
-        }
-        for (int i = 0; i < n_targetloads; ++i) {
-            param_desc_.push_back(p.target_loads);
-        }
-    }
-
+    DefineBlock<GovernorTs<Interactive>>(param_desc_, p, soc_);
     // WALT HMP 调速器参数上下限
-    param_desc_.push_back(p.sched_downmigrate);
-    param_desc_.push_back(p.sched_upmigrate);
-    param_desc_.push_back(p.sched_ravg_hist_size);
-    param_desc_.push_back(p.sched_window_stats_policy);
-    param_desc_.push_back(p.sched_boost);
-    param_desc_.push_back(p.timer_rate);
-
+    DefineBlock<WaltHmp::Tunables>(param_desc_, p, soc_);
     // 输入升频参数上下限
-    for (const auto &cluster : soc_->clusters_) {
-        ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
-        param_desc_.push_back(input_freq);
-    }
-    param_desc_.push_back(p.input_duration);
+    DefineBlock<TouchBoost::Tunables>(param_desc_, p, soc_);
     param_len_ = param_desc_.size();
 }
 
@@ -422,13 +486,10 @@ SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) cons
 
     // interactive 调速器参数上下限
     int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx++] = Interactive::Tunables(cluster);
-    }
-
+    for (const auto &cluster : soc_->clusters_)
+        t.governor.t[idx++] = Interactive::Tunables(cluster);
     // WALT HMP 调速器参数上下限
     t.sched = WaltHmp::Tunables();
-
     // 输入升频参数上下限
     t.boost = TouchBoost::Tunables(soc_);
 
@@ -441,48 +502,17 @@ typename SimBL::Tunables OpengaAdapter<SimBL>::TranslateParamSeq(const ParamSeq 
 
     ParamSeq::const_iterator  it_seq  = p.begin();
     ParamDesc::const_iterator it_desc = param_desc_.begin();
-
     // interactive 调速器参数上下限
-    int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx].hispeed_freq        = QuatFreqParam(*it_seq++, cluster, *it_desc++);
-        t.governor[idx].go_hispeed_load     = QuatLoadParam(*it_seq++, *it_desc++);
-        t.governor[idx].min_sample_time     = Quantify(*it_seq++, *it_desc++);
-        t.governor[idx].max_freq_hysteresis = Quantify(*it_seq++, *it_desc++);
-
-        int n_opp         = cluster.model_.opp_model.size();
-        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            t.governor[idx].above_hispeed_delay[i] = Quantify(*it_seq++, *it_desc++);
-        }
-        for (int i = 0; i < n_targetloads; ++i) {
-            t.governor[idx].target_loads[i] = QuatLoadParam(*it_seq++, *it_desc++);
-        }
-        idx++;
-    }
-
+    t.governor = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc_);
     // PELT HMP 调速器参数上下限
-    t.sched.down_threshold     = Quantify(*it_seq++, *it_desc++);
-    t.sched.up_threshold       = Quantify(*it_seq++, *it_desc++);
-    t.sched.up_threshold       = std::max(t.sched.down_threshold, t.sched.up_threshold);
-    t.sched.load_avg_period_ms = Quantify(*it_seq++, *it_desc++);
-    t.sched.boost              = Quantify(*it_seq++, *it_desc++);
-    t.sched.timer_rate         = Quantify(*it_seq++, *it_desc++);
-
+    t.sched = TranslateBlock<PeltHmp::Tunables>(it_seq, it_desc, soc_);
     // 输入升频参数上下限
-    idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.boost.boost_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
-        idx++;
-    }
-    t.boost.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
+    t.boost = TranslateBlock<TouchBoost::Tunables>(it_seq, it_desc, soc_);
 
     // 时长类参数取整到一个timer_rate
-    idx = 0;
+    int idx = 0;
     for (const auto &cluster : soc_->clusters_) {
-        auto & tunable       = t.governor[idx];
+        auto & tunable       = t.governor.t[idx];
         double timer_quantum = t.sched.timer_rate;
 
         tunable.min_sample_time     = std::max(1.0, std::round(tunable.min_sample_time / timer_quantum));
@@ -503,38 +533,11 @@ typename SimBL::Tunables OpengaAdapter<SimBL>::TranslateParamSeq(const ParamSeq 
 template <>
 void OpengaAdapter<SimBL>::InitParamDesc(const ParamDescCfg &p) {
     // interactive 调速器参数上下限
-    for (const auto &cluster : soc_->clusters_) {
-        ParamDescElement hispeed_freq_desc = {cluster.model_.min_freq, cluster.model_.max_freq};
-        param_desc_.push_back(hispeed_freq_desc);
-        param_desc_.push_back(p.go_hispeed_load);
-        param_desc_.push_back(p.min_sample_time);
-        param_desc_.push_back(p.max_freq_hysteresis);
-
-        int n_opp         = cluster.model_.opp_model.size();
-        int n_above       = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-        int n_targetloads = std::min(TARGET_LOAD_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            param_desc_.push_back(p.above_hispeed_delay);
-        }
-        for (int i = 0; i < n_targetloads; ++i) {
-            param_desc_.push_back(p.target_loads);
-        }
-    }
-
+    DefineBlock<GovernorTs<Interactive>>(param_desc_, p, soc_);
     // PELT HMP 调速器参数上下限
-    param_desc_.push_back(p.down_threshold);
-    param_desc_.push_back(p.up_threshold);
-    param_desc_.push_back(p.load_avg_period_ms);
-    param_desc_.push_back(p.boost);
-    param_desc_.push_back(p.timer_rate);
-
+    DefineBlock<PeltHmp::Tunables>(param_desc_, p, soc_);
     // 输入升频参数上下限
-    for (const auto &cluster : soc_->clusters_) {
-        ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
-        param_desc_.push_back(input_freq);
-    }
-    param_desc_.push_back(p.input_duration);
+    DefineBlock<TouchBoost::Tunables>(param_desc_, p, soc_);
     param_len_ = param_desc_.size();
 }
 
@@ -544,13 +547,10 @@ SimBL::Tunables OpengaAdapter<SimBL>::GenerateDefaultTunables(void) const {
 
     // interactive 调速器参数上下限
     int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        t.governor[idx++] = Interactive::Tunables(cluster);
-    }
-
+    for (const auto &cluster : soc_->clusters_)
+        t.governor.t[idx++] = Interactive::Tunables(cluster);
     // PELT HMP 调速器参数上下限
     t.sched = PeltHmp::Tunables();
-
     // 输入升频参数上下限
     t.boost = TouchBoost::Tunables(soc_);
 

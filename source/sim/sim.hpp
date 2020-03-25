@@ -2,12 +2,19 @@
 #define __SIM_H
 
 #include <stdint.h>
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
+
 #include "cpumodel.h"
 #include "sim_types.h"
 #include "workload.h"
+
+template <typename GovernorType>
+struct GovernorTs {
+    typename GovernorType::Tunables t[2];
+};
 
 // 仿真运行
 template <typename GovernorType, typename SchedType, typename BoostType>
@@ -16,9 +23,9 @@ public:
 #define POWER_SHIFT 4
 
     typedef struct _Tunables {
-        typename GovernorType::Tunables governor[2];
-        typename SchedType::Tunables    sched;
-        typename BoostType::Tunables    boost;
+        GovernorTs<GovernorType>     governor;
+        typename SchedType::Tunables sched;
+        typename BoostType::Tunables boost;
     } Tunables;
 
     typedef struct _MiscConst {
@@ -37,8 +44,8 @@ public:
         const int idle_base_pwr = misc_.idle_base_mw * 100;
 
         // 使用参数实例化CPU调速器仿真
-        auto little_governor = GovernorType(tunables_.governor[0], &soc.clusters_[0]);
-        auto big_governor    = GovernorType(tunables_.governor[cl_big_idx], &soc.clusters_[cl_big_idx]);
+        auto little_governor = GovernorType(tunables_.governor.t[0], &soc.clusters_[0]);
+        auto big_governor    = GovernorType(tunables_.governor.t[cl_big_idx], &soc.clusters_[cl_big_idx]);
 
         // 使用参数实例化调度器仿真
         typename SchedType::Cfg sched_cfg;

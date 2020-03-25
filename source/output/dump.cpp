@@ -212,7 +212,7 @@ std::string Dumper<SimQcomBL>::SimTunableToStr(const SimQcomBL::Tunables &t) con
     int cluster_num = soc_.clusters_.size();
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor[idx_cluster];
+        const auto &g = t.governor.t[idx_cluster];
 
         auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
 
@@ -303,7 +303,7 @@ std::string Dumper<SimQcomBL>::LevelToStr(const SimQcomBL::Tunables &t, int leve
     }
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor[idx_cluster];
+        const auto &g = t.governor.t[idx_cluster];
         // 核心上线 /sys/devices/system/cpu/cpu4/online
         append_val(1);
         // append_cpufreq_param("scaling_governor", idx_cluster);
@@ -492,7 +492,7 @@ std::string Dumper<SimBL>::SimTunableToStr(const SimBL::Tunables &t) const {
     int cluster_num = soc_.clusters_.size();
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor[idx_cluster];
+        const auto &g = t.governor.t[idx_cluster];
 
         auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
 
@@ -555,7 +555,7 @@ std::string Dumper<SimBL>::LevelToStr(const SimBL::Tunables &t, int level) const
     auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
 
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor[idx_cluster];
+        const auto &g = t.governor.t[idx_cluster];
         // 核心上线 /sys/devices/system/cpu/cpu4/online
         append_val(1);
         // append_cpufreq_param("scaling_governor", idx_cluster);

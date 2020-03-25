@@ -42,6 +42,9 @@ typedef struct _ParamDescCfg {
     ParamDescElement boost;
 } ParamDescCfg;
 
+using ParamSeq  = std::vector<double>;
+using ParamDesc = std::vector<ParamDescElement>;
+
 template <typename SimType>
 class OpengaAdapter {
 public:
@@ -73,10 +76,8 @@ public:
         Rank::Score                score;
     };
 
-    typedef std::vector<double>               ParamSeq;
-    typedef std::vector<ParamDescElement>     ParamDesc;
-    typedef EA::Genetic<ParamSeq, MiddleCost> GA_Type;
-    typedef std::function<double(void)>       RandomFunc;
+    using GA_Type    = EA::Genetic<ParamSeq, MiddleCost>;
+    using RandomFunc = std::function<double(void)>;
 
     OpengaAdapter(Soc *soc, const Workload *workload, const Workload *idleload, const std::string &ga_cfg_file);
     std::vector<OpengaAdapter::Result> Optimize(void);
