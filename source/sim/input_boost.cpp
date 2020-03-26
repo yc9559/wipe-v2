@@ -17,23 +17,23 @@ InputBoost<GovernorT, SchedT>::Tunables::Tunables(const Soc *soc) {
 
 template <typename GovernorT, typename SchedT>
 void InputBoost<GovernorT, SchedT>::DoBoost() {
-    auto cls   = this->env_.soc->clusters_;
-    int  nr_cl = cls.size();
-    for (int i = 0; i < nr_cl; ++i)
+    auto &cls = this->env_.soc->clusters_;
+    int   nr  = cls.size();
+    for (int i = 0; i < nr; ++i)
         cls[i].SetMinfreq(tunables_.boost_freq[i]);
 }
 
 template <typename GovernorT, typename SchedT>
 void InputBoost<GovernorT, SchedT>::DoResume() {
-    auto cls   = this->env_.soc->clusters_;
-    int  nr_cl = cls.size();
-    for (int i = 0; i < nr_cl; ++i)
+    auto &cls = this->env_.soc->clusters_;
+    int   nr  = cls.size();
+    for (int i = 0; i < nr; ++i)
         cls[i].SetMinfreq(cls[i].model_.min_freq);
 }
 
 template <typename GovernorT, typename SchedT>
 void InputBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cur_quantum) {
-    if (has_input && tunables_.duration_quantum) {
+    if (tunables_.duration_quantum && has_input) {
         this->input_happened_quantum_ = cur_quantum;
         DoBoost();
         this->is_in_boost_ = true;
