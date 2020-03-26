@@ -17,9 +17,13 @@
 
 using InputBoostWalt = InputBoost<Interactive, WaltHmp>;
 using InputBoostPelt = InputBoost<Interactive, PeltHmp>;
+using UperfBoostWalt = UperfBoost<Interactive, WaltHmp>;
+using UperfBoostPelt = UperfBoost<Interactive, PeltHmp>;
 
 using SimQcomBL = Sim<Interactive, WaltHmp, InputBoostWalt>;
 using SimBL     = Sim<Interactive, PeltHmp, InputBoostPelt>;
+using SimQcomUp = Sim<Interactive, WaltHmp, UperfBoostWalt>;
+using SimUp     = Sim<Interactive, PeltHmp, UperfBoostPelt>;
 
 typedef struct _ParamDescElement {
     int range_start;

@@ -361,6 +361,24 @@ GovernorTs<Interactive> TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDe
         idx++;
     }
 
+    // 时长类参数取整到一个timer_rate
+    idx = 0;
+    for (const auto &cluster : soc->clusters_) {
+        auto & tunable       = t.t[idx];
+        double timer_quantum = 2;  // timer_rate 固定为20ms
+
+        tunable.min_sample_time     = std::max(1.0, std::round(tunable.min_sample_time / timer_quantum));
+        tunable.max_freq_hysteresis = std::max(1.0, std::round(tunable.max_freq_hysteresis / timer_quantum));
+
+        int n_opp   = cluster.model_.opp_model.size();
+        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
+
+        for (int i = 0; i < n_above; ++i) {
+            tunable.above_hispeed_delay[i] = std::max(1.0, std::round(tunable.above_hispeed_delay[i] / timer_quantum));
+        }
+        idx++;
+    }
+
     return std::move(t);
 }
 
@@ -452,6 +470,74 @@ InputBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     return std::move(t);
 }
 
+template <>
+void DefineBlock<UperfBoostWalt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    for (const auto &cluster : soc->clusters_) {
+        ParamDescElement freq = {cluster.model_.min_freq, cluster.model_.max_freq};
+        desc.push_back(freq);
+        desc.push_back(freq);
+    }
+    desc.push_back(p.sched_downmigrate);
+    desc.push_back(p.sched_upmigrate);
+    DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
+}
+
+template <>
+UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+                                        const Soc *soc) {
+    UperfBoostWalt::Tunables t;
+
+    int idx = 0;
+    for (const auto &cluster : soc->clusters_) {
+        t.min_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+        t.max_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+        t.max_freq[idx] = std::max(t.min_freq[idx], t.max_freq[idx]);
+        ++idx;
+    }
+    t.sched_down = Quantify(*it_seq++, *it_desc++);
+    t.sched_up   = Quantify(*it_seq++, *it_desc++);
+    t.sched_up   = std::max(t.sched_down, t.sched_up);
+    auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
+    t.little     = iblk.t[0];
+    t.big        = iblk.t[1];
+
+    return std::move(t);
+}
+
+template <>
+void DefineBlock<UperfBoostPelt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    for (const auto &cluster : soc->clusters_) {
+        ParamDescElement freq = {cluster.model_.min_freq, cluster.model_.max_freq};
+        desc.push_back(freq);
+        desc.push_back(freq);
+    }
+    desc.push_back(p.down_threshold);
+    desc.push_back(p.up_threshold);
+    DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
+}
+
+template <>
+UperfBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+                                        const Soc *soc) {
+    UperfBoostPelt::Tunables t;
+
+    int idx = 0;
+    for (const auto &cluster : soc->clusters_) {
+        t.min_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+        t.max_freq[idx] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+        t.max_freq[idx] = std::max(t.min_freq[idx], t.max_freq[idx]);
+        ++idx;
+    }
+    t.sched_down = Quantify(*it_seq++, *it_desc++);
+    t.sched_up   = Quantify(*it_seq++, *it_desc++);
+    t.sched_up   = std::max(t.sched_down, t.sched_up);
+    auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
+    t.little     = iblk.t[0];
+    t.big        = iblk.t[1];
+
+    return std::move(t);
+}
+
 template <typename SimType>
 typename SimType::Tunables OpengaAdapter<SimType>::TranslateParamSeq(const ParamSeq &p) const {
     typename SimType::Tunables t;
@@ -464,24 +550,6 @@ typename SimType::Tunables OpengaAdapter<SimType>::TranslateParamSeq(const Param
     t.sched = TranslateBlock<typename SimType::Sched::Tunables>(it_seq, it_desc, soc_);
     // boost升频参数上下限
     t.boost = TranslateBlock<typename SimType::Boost::Tunables>(it_seq, it_desc, soc_);
-
-    // 时长类参数取整到一个timer_rate
-    int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        auto & tunable       = t.governor.t[idx];
-        double timer_quantum = t.sched.timer_rate;
-
-        tunable.min_sample_time     = std::max(1.0, std::round(tunable.min_sample_time / timer_quantum));
-        tunable.max_freq_hysteresis = std::max(1.0, std::round(tunable.max_freq_hysteresis / timer_quantum));
-
-        int n_opp   = cluster.model_.opp_model.size();
-        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            tunable.above_hispeed_delay[i] = std::max(1.0, std::round(tunable.above_hispeed_delay[i] / timer_quantum));
-        }
-        idx++;
-    }
 
     return t;
 }
@@ -513,3 +581,5 @@ typename SimType::Tunables OpengaAdapter<SimType>::GenerateDefaultTunables(void)
 
 template class OpengaAdapter<SimQcomBL>;
 template class OpengaAdapter<SimBL>;
+template class OpengaAdapter<SimQcomUp>;
+template class OpengaAdapter<SimUp>;

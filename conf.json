@@ -89,7 +89,7 @@
         },
         "timer_rate": {
             "min": 2,
-            "max": 10
+            "max": 2
         },
         "input_duration": {
             "min": 0,

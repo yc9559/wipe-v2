@@ -45,5 +45,113 @@ void InputBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
     }
 };
 
+template <typename GovernorT, typename SchedT>
+void UperfBoost<GovernorT, SchedT>::DoBoost() {
+    if (is_original_inited_ == false) {
+        is_original_inited_ = true;
+        Backup();
+    }
+    Apply(tunables_);
+}
+
+template <typename GovernorT, typename SchedT>
+void UperfBoost<GovernorT, SchedT>::DoResume() {
+    Apply(original_);
+}
+
+template <typename GovernorT, typename SchedT>
+void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cur_quantum) {
+    if (has_render) {
+        this->render_stop_quantum_ = cur_quantum;
+    }
+    if (!this->is_in_boost_ && has_input) {
+        this->render_stop_quantum_ = cur_quantum;
+        DoBoost();
+        this->is_in_boost_ = true;
+        return;
+    }
+    // uperf在渲染结束后200ms停止hint
+    if (this->is_in_boost_ && cur_quantum - this->render_stop_quantum_ > 20) {
+        DoResume();
+        this->is_in_boost_ = false;
+    }
+};
+
+void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interactive, WaltHmp>::Tunables &t) {
+    auto soc    = this->env_.soc;
+    auto little = this->env_.little;
+    auto big    = this->env_.big;
+    auto sched  = this->env_.sched;
+
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = sched->GetTunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        soc->clusters_[i].SetMinfreq(t.min_freq[i]);
+        soc->clusters_[i].SetMaxfreq(t.max_freq[i]);
+    }
+    sched_tunables.sched_upmigrate   = t.sched_up;
+    sched_tunables.sched_downmigrate = t.sched_down;
+    sched->SetTunables(sched_tunables);
+    little->SetTunables(t.little);
+    big->SetTunables(t.big);
+}
+
+void UperfBoost<Interactive, PeltHmp>::Apply(const typename UperfBoost<Interactive, PeltHmp>::Tunables &t) {
+    auto soc    = this->env_.soc;
+    auto little = this->env_.little;
+    auto big    = this->env_.big;
+    auto sched  = this->env_.sched;
+
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = sched->GetTunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        soc->clusters_[i].SetMinfreq(t.min_freq[i]);
+        soc->clusters_[i].SetMaxfreq(t.max_freq[i]);
+    }
+    sched_tunables.up_threshold   = t.sched_up;
+    sched_tunables.down_threshold = t.sched_down;
+    sched->SetTunables(sched_tunables);
+    little->SetTunables(t.little);
+    big->SetTunables(t.big);
+}
+
+void UperfBoost<Interactive, WaltHmp>::Backup() {
+    const auto soc    = this->env_.soc;
+    const auto little = this->env_.little;
+    const auto big    = this->env_.big;
+    const auto sched  = this->env_.sched;
+
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = sched->GetTunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        original_.min_freq[i] = soc->clusters_[i].model_.min_freq;
+        original_.max_freq[i] = soc->clusters_[i].model_.max_freq;
+    }
+    original_.sched_up   = sched_tunables.sched_upmigrate;
+    original_.sched_down = sched_tunables.sched_downmigrate;
+    original_.little     = little->GetTunables();
+    original_.big        = big->GetTunables();
+}
+
+void UperfBoost<Interactive, PeltHmp>::Backup() {
+    const auto soc    = this->env_.soc;
+    const auto little = this->env_.little;
+    const auto big    = this->env_.big;
+    const auto sched  = this->env_.sched;
+
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = sched->GetTunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        original_.min_freq[i] = soc->clusters_[i].model_.min_freq;
+        original_.max_freq[i] = soc->clusters_[i].model_.max_freq;
+    }
+    original_.sched_up   = sched_tunables.up_threshold;
+    original_.sched_down = sched_tunables.down_threshold;
+    original_.little     = little->GetTunables();
+    original_.big        = big->GetTunables();
+}
+
 template class InputBoost<Interactive, WaltHmp>;
 template class InputBoost<Interactive, PeltHmp>;
+template class UperfBoost<Interactive, WaltHmp>;
+template class UperfBoost<Interactive, PeltHmp>;
