@@ -262,6 +262,7 @@ std::vector<typename OpengaAdapter<SimType>::Result> OpengaAdapter<SimType>::Opt
     }
 
     std::cout << "\nTarget: " << soc_->name_ << std::endl;
+    std::cout << "Chromosome length: " << param_len_ << std::endl;
 
     ga_obj.solve();
 

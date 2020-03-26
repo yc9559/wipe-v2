@@ -67,6 +67,128 @@ std::string HispeedDelayToStr(const Interactive::Tunables &t, const Cluster &cl,
     return buf.str();
 }
 
+template <typename T>
+void TunableToStream(std::ostringstream &os, const T &t, const Soc &soc) {
+    return;
+}
+
+template <>
+void TunableToStream<GovernorTs<Interactive>>(std::ostringstream &os, const GovernorTs<Interactive> &t,
+                                              const Soc &soc) {
+    using namespace std;
+    int cluster_num = soc.clusters_.size();
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        const auto &g = t.t[idx_cluster];
+
+        auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * 2) - 2); };
+
+        os << "[interactive] cluster " << idx_cluster << endl << endl;
+        os << "hispeed_freq: " << Mhz2kHz(g.hispeed_freq) << endl;
+        os << "go_hispeed_load: " << g.go_hispeed_load << endl;
+        os << "min_sample_time: " << multiple_to_us(g.min_sample_time) << endl;
+        os << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
+
+        os << "above_hispeed_delay: ";
+        os << HispeedDelayToStr(g, soc.clusters_[idx_cluster], 2) << endl;
+        os << "target_loads: ";
+        os << TargetLoadsToStr(g, soc.clusters_[idx_cluster]) << endl;
+        os << endl;
+    }
+}
+
+template <>
+void TunableToStream<WaltHmp::Tunables>(std::ostringstream &os, const WaltHmp::Tunables &t, const Soc &soc) {
+    using namespace std;
+    os << "[hmp sched]" << endl << endl;
+    os << "sched_downmigrate: " << t.sched_downmigrate << endl;
+    os << "sched_upmigrate: " << t.sched_upmigrate << endl;
+    os << "sched_ravg_hist_size: " << t.sched_ravg_hist_size << endl;
+    os << "sched_window_stats_policy: " << t.sched_window_stats_policy << endl;
+    os << "sched_boost: " << t.sched_boost << endl;
+    os << "timer_rate: " << Ms2Us(Quantum2Ms(t.timer_rate)) << endl;
+    os << endl;
+}
+
+template <>
+void TunableToStream<PeltHmp::Tunables>(std::ostringstream &os, const PeltHmp::Tunables &t, const Soc &soc) {
+    using namespace std;
+    os << "[hmp sched]" << endl << endl;
+    os << "down_threshold: " << t.down_threshold << endl;
+    os << "up_threshold: " << t.up_threshold << endl;
+    os << "load_avg_period_ms: " << t.load_avg_period_ms << endl;
+    os << "boost: " << t.boost << endl;
+    os << "timer_rate: " << Ms2Us(Quantum2Ms(t.timer_rate)) << endl;
+    os << endl;
+}
+
+template <>
+void TunableToStream<InputBoostWalt::Tunables>(std::ostringstream &os, const InputBoostWalt::Tunables &t,
+                                               const Soc &soc) {
+    using namespace std;
+    int cluster_num = soc.clusters_.size();
+    if (soc.GetInputBoostFeature() == true) {
+        os << "[input boost]" << endl << endl;
+        for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+            os << "cluster " << idx_cluster << ": " << t.boost_freq[idx_cluster] << endl;
+        }
+        os << "ms: " << Quantum2Ms(t.duration_quantum) << endl;
+        os << endl;
+    }
+}
+
+template <>
+void TunableToStream<InputBoostPelt::Tunables>(std::ostringstream &os, const InputBoostPelt::Tunables &t,
+                                               const Soc &soc) {
+    using namespace std;
+    int cluster_num = soc.clusters_.size();
+    if (soc.GetInputBoostFeature() == true) {
+        os << "[input boost]" << endl << endl;
+        for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+            os << "cluster " << idx_cluster << ": " << t.boost_freq[idx_cluster] << endl;
+        }
+        os << "ms: " << Quantum2Ms(t.duration_quantum) << endl;
+        os << endl;
+    }
+}
+
+template <>
+void TunableToStream<UperfBoostWalt::Tunables>(std::ostringstream &os, const UperfBoostWalt::Tunables &t,
+                                               const Soc &soc) {
+    using namespace std;
+    int cluster_num = soc.clusters_.size();
+    os << "[uperf boost]" << endl << endl;
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        os << "cluster " << idx_cluster << ": " << t.min_freq[idx_cluster] << " - " << t.max_freq[idx_cluster] << endl;
+    }
+    os << "sched_up  : " << t.sched_up << endl;
+    os << "sched_down: " << t.sched_down << endl;
+
+    GovernorTs<Interactive> ts;
+    ts.t[0] = t.little;
+    ts.t[1] = t.big;
+    TunableToStream<GovernorTs<Interactive>>(os, ts, soc);
+    os << endl;
+}
+
+template <>
+void TunableToStream<UperfBoostPelt::Tunables>(std::ostringstream &os, const UperfBoostPelt::Tunables &t,
+                                               const Soc &soc) {
+    using namespace std;
+    int cluster_num = soc.clusters_.size();
+    os << "[uperf boost]" << endl << endl;
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        os << "cluster " << idx_cluster << ": " << t.min_freq[idx_cluster] << " - " << t.max_freq[idx_cluster] << endl;
+    }
+    os << "sched_up  : " << t.sched_up << endl;
+    os << "sched_down: " << t.sched_down << endl;
+
+    GovernorTs<Interactive> ts;
+    ts.t[0] = t.little;
+    ts.t[1] = t.big;
+    TunableToStream<GovernorTs<Interactive>>(os, ts, soc);
+    os << endl;
+}
+
 // 生成形如"0:902000 1:0 2:0 3:0 4:1401000"的参数
 std::string QcomFreqParamToStr(int freq0, int freq1, int ncore0, int ncore1) {
     using namespace std;
@@ -205,48 +327,24 @@ void Dumper<SimType>::DumpToShellScript(const std::vector<typename OpengaAdapter
 }
 
 template <>
-std::string Dumper<SimQcomBL>::SimTunableToStr(const SimQcomBL::Tunables &t) const {
+void Dumper<SimQcomUp>::DumpToShellScript(const std::vector<OpengaAdapter<SimQcomUp>::Result> &results) {
+    // Uperf类型不使用shell脚本控制
+    return;
+}
+
+template <>
+void Dumper<SimUp>::DumpToShellScript(const std::vector<OpengaAdapter<SimUp>::Result> &results) {
+    // Uperf类型不使用shell脚本控制
+    return;
+}
+
+template <typename SimType>
+std::string Dumper<SimType>::SimTunableToStr(const typename SimType::Tunables &t) const {
     using namespace std;
     ostringstream buf;
-
-    int cluster_num = soc_.clusters_.size();
-
-    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor.t[idx_cluster];
-
-        auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
-
-        buf << "[interactive] cluster " << idx_cluster << endl << endl;
-        buf << "hispeed_freq: " << Mhz2kHz(g.hispeed_freq) << endl;
-        buf << "go_hispeed_load: " << g.go_hispeed_load << endl;
-        buf << "min_sample_time: " << multiple_to_us(g.min_sample_time) << endl;
-        buf << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
-
-        buf << "above_hispeed_delay: ";
-        buf << HispeedDelayToStr(g, soc_.clusters_[idx_cluster], t.sched.timer_rate) << endl;
-        buf << "target_loads: ";
-        buf << TargetLoadsToStr(g, soc_.clusters_[idx_cluster]) << endl;
-        buf << endl;
-    }
-
-    buf << "[hmp sched]" << endl << endl;
-    buf << "sched_downmigrate: " << t.sched.sched_downmigrate << endl;
-    buf << "sched_upmigrate: " << t.sched.sched_upmigrate << endl;
-    buf << "sched_ravg_hist_size: " << t.sched.sched_ravg_hist_size << endl;
-    buf << "sched_window_stats_policy: " << t.sched.sched_window_stats_policy << endl;
-    buf << "sched_boost: " << t.sched.sched_boost << endl;
-    buf << "timer_rate: " << Ms2Us(Quantum2Ms(t.sched.timer_rate)) << endl;
-    buf << endl;
-
-    if (soc_.GetInputBoostFeature() == true) {
-        buf << "[input boost]" << endl << endl;
-        for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-            buf << "cluster " << idx_cluster << ": " << t.boost.boost_freq[idx_cluster] << endl;
-        }
-        buf << "ms: " << Quantum2Ms(t.boost.duration_quantum) << endl;
-        buf << endl;
-    }
-
+    TunableToStream<GovernorTs<typename SimType::Governor>>(buf, t.governor, soc_);
+    TunableToStream<typename SimType::Sched::Tunables>(buf, t.sched, soc_);
+    TunableToStream<typename SimType::Boost::Tunables>(buf, t.boost, soc_);
     return buf.str();
 }
 
@@ -485,51 +583,6 @@ std::string Dumper<SimQcomBL>::SysfsObjToStr(void) {
 }
 
 template <>
-std::string Dumper<SimBL>::SimTunableToStr(const SimBL::Tunables &t) const {
-    using namespace std;
-    ostringstream buf;
-
-    int cluster_num = soc_.clusters_.size();
-
-    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.governor.t[idx_cluster];
-
-        auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * t.sched.timer_rate) - 2); };
-
-        buf << "[interactive] cluster " << idx_cluster << endl << endl;
-        buf << "hispeed_freq: " << Mhz2kHz(g.hispeed_freq) << endl;
-        buf << "go_hispeed_load: " << g.go_hispeed_load << endl;
-        buf << "min_sample_time: " << multiple_to_us(g.min_sample_time) << endl;
-        buf << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
-
-        buf << "above_hispeed_delay: ";
-        buf << HispeedDelayToStr(g, soc_.clusters_[idx_cluster], t.sched.timer_rate) << endl;
-        buf << "target_loads: ";
-        buf << TargetLoadsToStr(g, soc_.clusters_[idx_cluster]) << endl;
-        buf << endl;
-    }
-
-    buf << "[hmp sched]" << endl << endl;
-    buf << "down_threshold: " << t.sched.down_threshold << endl;
-    buf << "up_threshold: " << t.sched.up_threshold << endl;
-    buf << "load_avg_period_ms: " << t.sched.load_avg_period_ms << endl;
-    buf << "boost: " << t.sched.boost << endl;
-    buf << "timer_rate: " << Ms2Us(Quantum2Ms(t.sched.timer_rate)) << endl;
-    buf << endl;
-
-    if (soc_.GetInputBoostFeature() == true) {
-        buf << "[input boost]" << endl << endl;
-        for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-            buf << "cluster " << idx_cluster << ": " << t.boost.boost_freq[idx_cluster] << endl;
-        }
-        buf << "ms: " << Quantum2Ms(t.boost.duration_quantum) << endl;
-        buf << endl;
-    }
-
-    return buf.str();
-}
-
-template <>
 std::string Dumper<SimBL>::LevelToStr(const SimBL::Tunables &t, int level) const {
     using namespace std;
     ostringstream buf;
@@ -696,5 +749,27 @@ std::string Dumper<SimBL>::SysfsObjToStr(void) {
     return buf.str();
 }
 
+template <>
+std::string Dumper<SimQcomUp>::LevelToStr(const SimQcomUp::Tunables &t, int level) const {
+    return std::string();
+}
+
+template <>
+std::string Dumper<SimQcomUp>::SysfsObjToStr(void) {
+    return std::string();
+}
+
+template <>
+std::string Dumper<SimUp>::LevelToStr(const SimUp::Tunables &t, int level) const {
+    return std::string();
+}
+
+template <>
+std::string Dumper<SimUp>::SysfsObjToStr(void) {
+    return std::string();
+}
+
 template class Dumper<SimQcomBL>;
 template class Dumper<SimBL>;
+template class Dumper<SimQcomUp>;
+template class Dumper<SimUp>;
