@@ -1,6 +1,8 @@
 #include "workload.h"
+
 #include <fstream>
 #include <iostream>
+
 #include "json.hpp"
 
 Workload::Workload(const std::string &workload_file) {
@@ -25,27 +27,7 @@ Workload::Workload(const std::string &workload_file) {
         src_.push_back(src_name);
     }
 
-    if (j["windowedLoad"].size() == 0) {
-        using namespace std;
-        cout << "windowedLoad is empty: " << workload_file << endl;
-        throw runtime_error("windowedLoad is empty");
-    }
-
     auto loadpct_to_demand = [=](int load) { return kWorkloadScaleFactor * freq_ * efficiency_ * load; };
-    
-    windowed_load_.reserve(j["windowedLoad"].size());
-    for (const auto &slice : j["windowedLoad"]) {
-        LoadSlice l;
-        memset(&l, 0, sizeof(LoadSlice));
-
-        l.max_load = loadpct_to_demand(slice[0]);
-        for (int idx = 0; idx < core_num_; ++idx) {
-            l.load[idx] = loadpct_to_demand(slice[idx + 1]);
-        }
-        l.has_input_event = slice[core_num_ + 1];
-
-        windowed_load_.push_back(l);
-    }
 
     if (j["renderLoad"].size() == 0) {
         using namespace std;
@@ -59,11 +41,11 @@ Workload::Workload(const std::string &workload_file) {
         RenderSlice r;
         memset(&r, 0, sizeof(RenderSlice));
 
-        int begin_q   = render_demand[0];
-        int end_q     = begin_q + frame_quantum_;
-        int idx_rec   = 0;
-        int left_q    = begin_q;
-        int right_q   = next_win_q(begin_q);
+        int begin_q = render_demand[0];
+        int end_q   = begin_q + frame_quantum_;
+        int idx_rec = 0;
+        int left_q  = begin_q;
+        int right_q = next_win_q(begin_q);
         while (left_q != right_q) {
             r.window_idxs[idx_rec]     = left_q / window_quantum_;
             r.window_quantums[idx_rec] = right_q - left_q;
@@ -74,5 +56,34 @@ Workload::Workload(const std::string &workload_file) {
         r.frame_load = loadpct_to_demand(render_demand[1]);
 
         render_load_.push_back(r);
+    }
+
+    if (j["windowedLoad"].size() == 0) {
+        using namespace std;
+        cout << "windowedLoad is empty: " << workload_file << endl;
+        throw runtime_error("windowedLoad is empty");
+    }
+
+    auto has_render = [&](int idx) {
+        for (const auto &r : render_load_) {
+            if (r.window_idxs[0] == idx || r.window_idxs[1] == idx || r.window_idxs[2] == idx)
+                return true;
+        }
+        return false;
+    };
+
+    windowed_load_.reserve(j["windowedLoad"].size());
+    for (const auto &slice : j["windowedLoad"]) {
+        LoadSlice l;
+        memset(&l, 0, sizeof(LoadSlice));
+
+        l.max_load = loadpct_to_demand(slice[0]);
+        for (int idx = 0; idx < core_num_; ++idx) {
+            l.load[idx] = loadpct_to_demand(slice[idx + 1]);
+        }
+        l.has_input_event = slice[core_num_ + 1];
+        l.has_render      = has_render(windowed_load_.size());
+
+        windowed_load_.push_back(l);
     }
 }

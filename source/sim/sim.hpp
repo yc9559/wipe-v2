@@ -82,7 +82,7 @@ public:
             capacity_log.push_back(capacity);
             power_log.push_back(base_pwr + sched.CalcPower(w.load));
 
-            boost.Tick(w.has_input_event, false, quantum_cnt);
+            boost.Tick(w.has_input_event, w.has_render, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, workload.core_num_, quantum_cnt);
             quantum_cnt++;
         }

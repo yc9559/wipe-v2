@@ -12,6 +12,7 @@ public:
         int max_load;
         int load[4];
         int has_input_event;
+        int has_render;
     } LoadSlice;
 
     typedef struct _RenderSlice {
