@@ -2,64 +2,53 @@
 #define __INPUT_BOOST_H
 
 #include "cpumodel.h"
-#include "interactive.h"
 
-class InputBoost {
+template <typename GovernorT, typename SchedT>
+class Boost {
 public:
-    typedef struct _Tunables {
-        int duration_quantum;
-        _Tunables() : duration_quantum(0) {}
-    } Tunables;
+    struct Tunables {};
 
-    InputBoost() : tunables_(), input_happened_quantum_(0), is_in_boost_(false) {}
-    InputBoost(const Tunables &tunables) : tunables_(tunables), input_happened_quantum_(0), is_in_boost_(false) {}
-
-    template <typename SchedT>
-    void DoBoost(Soc &soc, Interactive &little, Interactive &big, SchedT &sched) {}
-
-    template <typename SchedT>
-    void DoResume(Soc &soc, Interactive &little, Interactive &big, SchedT &sched) {}
-
-    template <typename SchedT>
-    void HandleInput(Soc &soc, Interactive &little, Interactive &big, SchedT &sched, int has_input, int cur_quantum) {
-        if (has_input && tunables_.duration_quantum) {
-            DoBoost(soc, little, big, sched);
-            input_happened_quantum_ = cur_quantum;
-            is_in_boost_            = true;
-            return;
-        }
-        if (is_in_boost_ && cur_quantum - input_happened_quantum_ > tunables_.duration_quantum) {
-            DoResume(soc, little, big, sched);
-            is_in_boost_ = false;
-        }
-        return;
+    struct SysEnv {
+        Soc *      soc;
+        GovernorT *little;
+        GovernorT *big;
+        SchedT *   sched;
     };
 
-private:
+    Boost() : tunables_(), env_(), is_in_boost_(false) {}
+    Boost(const Tunables &tunables, const SysEnv &env) : tunables_(tunables), env_(env), is_in_boost_(false) {}
+    void Tick(bool has_input, bool has_render, int cur_quantum) {}
+
+protected:
+    void DoBoost(void) {}
+    void DoResume(void) {}
+
     Tunables tunables_;
-    int      input_happened_quantum_;
+    SysEnv   env_;
     bool     is_in_boost_;
 };
 
-class TouchBoost : public InputBoost {
+template <typename GovernorT, typename SchedT>
+class InputBoost : public Boost<GovernorT, SchedT> {
 public:
-    typedef struct _Tunables : public InputBoost::Tunables {
+    struct Tunables : public Boost<GovernorT, SchedT>::Tunables {
         int boost_freq[2];
-        _Tunables() : boost_freq{0, 0} {}
-        _Tunables(const Soc *soc);
-    } Tunables;
+        int duration_quantum;
+        Tunables() : boost_freq{0, 0}, duration_quantum(0) {}
+        Tunables(const Soc *soc);
+    };
 
-    TouchBoost() : tunables_() {}
-    TouchBoost(const Tunables &tunables) : tunables_(tunables) {}
-
-    template <typename SchedT>
-    void DoBoost(Soc &soc, Interactive &little, Interactive &big, SchedT &sched);
-
-    template <typename SchedT>
-    void DoResume(Soc &soc, Interactive &little, Interactive &big, SchedT &sched);
+    InputBoost() : Boost<GovernorT, SchedT>(), input_happened_quantum_(0) {}
+    InputBoost(const Tunables &tunables, const typename Boost<GovernorT, SchedT>::SysEnv &env)
+        : Boost<GovernorT, SchedT>(tunables, env), input_happened_quantum_(0) {}
+    void Tick(bool has_input, bool has_render, int cur_quantum);
 
 private:
+    void DoBoost(void);
+    void DoResume(void);
+
     Tunables tunables_;
+    int      input_happened_quantum_;
 };
 
 #endif

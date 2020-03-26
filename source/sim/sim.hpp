@@ -11,21 +11,21 @@
 #include "sim_types.h"
 #include "workload.h"
 
-template <typename GovernorType>
+template <typename GovernorT>
 struct GovernorTs {
-    typename GovernorType::Tunables t[2];
+    typename GovernorT::Tunables t[2];
 };
 
 // 仿真运行
-template <typename GovernorType, typename SchedType, typename BoostType>
+template <typename GovernorT, typename SchedT, typename BoostT>
 class Sim {
 public:
 #define POWER_SHIFT 4
 
     typedef struct _Tunables {
-        GovernorTs<GovernorType>     governor;
-        typename SchedType::Tunables sched;
-        typename BoostType::Tunables boost;
+        GovernorTs<GovernorT>     governor;
+        typename SchedT::Tunables sched;
+        typename BoostT::Tunables boost;
     } Tunables;
 
     typedef struct _MiscConst {
@@ -44,22 +44,27 @@ public:
         const int idle_base_pwr = misc_.idle_base_mw * 100;
 
         // 使用参数实例化CPU调速器仿真
-        auto little_governor = GovernorType(tunables_.governor.t[0], &soc.clusters_[0]);
-        auto big_governor    = GovernorType(tunables_.governor.t[cl_big_idx], &soc.clusters_[cl_big_idx]);
+        auto little_governor = GovernorT(tunables_.governor.t[0], &soc.clusters_[0]);
+        auto big_governor    = GovernorT(tunables_.governor.t[cl_big_idx], &soc.clusters_[cl_big_idx]);
 
         // 使用参数实例化调度器仿真
-        typename SchedType::Cfg sched_cfg;
+        typename SchedT::Cfg sched_cfg;
         sched_cfg.tunables        = tunables_.sched;
         sched_cfg.little          = &soc.clusters_[0];
         sched_cfg.big             = &soc.clusters_[cl_big_idx];
         sched_cfg.governor_little = &little_governor;
         sched_cfg.governor_big    = &big_governor;
-        SchedType sched(sched_cfg);
+        SchedT sched(sched_cfg);
 
         // 使用参数实例化输入升频
-        auto boost = BoostType(tunables_.boost);
+        typename BoostT::SysEnv boost_env;
+        boost_env.soc    = &soc;
+        boost_env.little = &little_governor;
+        boost_env.big    = &big_governor;
+        boost_env.sched  = &sched;
+        BoostT boost(tunables_.boost, boost_env);
         if (soc.GetInputBoostFeature() == false)
-            boost = BoostType();
+            boost = BoostT();
 
         int quantum_cnt = 0;
         int capacity    = soc.clusters_[0].CalcCapacity();
@@ -73,7 +78,7 @@ public:
             capacity_log.push_back(capacity);
             power_log.push_back(base_pwr + sched.CalcPower(w.load));
 
-            boost.HandleInput(soc, little_governor, big_governor, sched, w.has_input_event, quantum_cnt);
+            boost.Tick(w.has_input_event, false, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, workload.core_num_, quantum_cnt);
             quantum_cnt++;
         }
@@ -85,7 +90,6 @@ public:
             AdaptLoad(w.load, idleload.core_num_, capacity);
             rp->offscreen_pwr += sched.CalcPowerForIdle(w.load);
 
-            boost.HandleInput(soc, little_governor, big_governor, sched, w.has_input_event, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, idleload.core_num_, quantum_cnt);
             quantum_cnt++;
         }

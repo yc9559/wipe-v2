@@ -409,7 +409,7 @@ PeltHmp::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::co
 }
 
 template <>
-void DefineBlock<TouchBoost::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+void DefineBlock<InputBoostWalt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
     for (const auto &cluster : soc->clusters_) {
         ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
         desc.push_back(input_freq);
@@ -418,9 +418,31 @@ void DefineBlock<TouchBoost::Tunables>(ParamDesc &desc, const ParamDescCfg &p, c
 }
 
 template <>
-TouchBoost::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+InputBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
                                     const Soc *soc) {
-    TouchBoost::Tunables t;
+    InputBoostWalt::Tunables t;
+
+    int idx = 0;
+    for (const auto &cluster : soc->clusters_)
+        t.boost_freq[idx++] = QuatFreqParam(*it_seq++, cluster, *it_desc++);
+    t.duration_quantum = QuatLargeParam(*it_seq++, 10, *it_desc++);
+
+    return std::move(t);
+}
+
+template <>
+void DefineBlock<InputBoostPelt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
+    for (const auto &cluster : soc->clusters_) {
+        ParamDescElement input_freq = {cluster.model_.min_freq, cluster.model_.max_freq};
+        desc.push_back(input_freq);
+    }
+    desc.push_back(p.input_duration);
+}
+
+template <>
+InputBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
+                                    const Soc *soc) {
+    InputBoostPelt::Tunables t;
 
     int idx = 0;
     for (const auto &cluster : soc->clusters_)
@@ -441,7 +463,7 @@ typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const P
     // WALT HMP 调速器参数上下限
     t.sched = TranslateBlock<WaltHmp::Tunables>(it_seq, it_desc, soc_);
     // 输入升频参数上下限
-    t.boost = TranslateBlock<TouchBoost::Tunables>(it_seq, it_desc, soc_);
+    t.boost = TranslateBlock<InputBoostWalt::Tunables>(it_seq, it_desc, soc_);
 
     // 时长类参数取整到一个timer_rate
     int idx = 0;
@@ -476,7 +498,7 @@ void OpengaAdapter<SimQcomBL>::InitParamDesc(const ParamDescCfg &p) {
     // WALT HMP 调速器参数上下限
     DefineBlock<WaltHmp::Tunables>(param_desc_, p, soc_);
     // 输入升频参数上下限
-    DefineBlock<TouchBoost::Tunables>(param_desc_, p, soc_);
+    DefineBlock<InputBoostWalt::Tunables>(param_desc_, p, soc_);
     param_len_ = param_desc_.size();
 }
 
@@ -491,7 +513,7 @@ SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) cons
     // WALT HMP 调速器参数上下限
     t.sched = WaltHmp::Tunables();
     // 输入升频参数上下限
-    t.boost = TouchBoost::Tunables(soc_);
+    t.boost = InputBoostWalt::Tunables(soc_);
 
     return t;
 }
@@ -507,7 +529,7 @@ typename SimBL::Tunables OpengaAdapter<SimBL>::TranslateParamSeq(const ParamSeq 
     // PELT HMP 调速器参数上下限
     t.sched = TranslateBlock<PeltHmp::Tunables>(it_seq, it_desc, soc_);
     // 输入升频参数上下限
-    t.boost = TranslateBlock<TouchBoost::Tunables>(it_seq, it_desc, soc_);
+    t.boost = TranslateBlock<InputBoostPelt::Tunables>(it_seq, it_desc, soc_);
 
     // 时长类参数取整到一个timer_rate
     int idx = 0;
@@ -537,7 +559,7 @@ void OpengaAdapter<SimBL>::InitParamDesc(const ParamDescCfg &p) {
     // PELT HMP 调速器参数上下限
     DefineBlock<PeltHmp::Tunables>(param_desc_, p, soc_);
     // 输入升频参数上下限
-    DefineBlock<TouchBoost::Tunables>(param_desc_, p, soc_);
+    DefineBlock<InputBoostPelt::Tunables>(param_desc_, p, soc_);
     param_len_ = param_desc_.size();
 }
 
@@ -552,7 +574,7 @@ SimBL::Tunables OpengaAdapter<SimBL>::GenerateDefaultTunables(void) const {
     // PELT HMP 调速器参数上下限
     t.sched = PeltHmp::Tunables();
     // 输入升频参数上下限
-    t.boost = TouchBoost::Tunables(soc_);
+    t.boost = InputBoostPelt::Tunables(soc_);
 
     return t;
 }
