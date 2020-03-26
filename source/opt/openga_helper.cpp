@@ -419,7 +419,7 @@ void DefineBlock<InputBoostWalt::Tunables>(ParamDesc &desc, const ParamDescCfg &
 
 template <>
 InputBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
-                                    const Soc *soc) {
+                                        const Soc *soc) {
     InputBoostWalt::Tunables t;
 
     int idx = 0;
@@ -441,7 +441,7 @@ void DefineBlock<InputBoostPelt::Tunables>(ParamDesc &desc, const ParamDescCfg &
 
 template <>
 InputBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::const_iterator &it_desc,
-                                    const Soc *soc) {
+                                        const Soc *soc) {
     InputBoostPelt::Tunables t;
 
     int idx = 0;
@@ -452,84 +452,18 @@ InputBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     return std::move(t);
 }
 
-template <>
-typename SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::TranslateParamSeq(const ParamSeq &p) const {
-    SimQcomBL::Tunables t;
+template <typename SimType>
+typename SimType::Tunables OpengaAdapter<SimType>::TranslateParamSeq(const ParamSeq &p) const {
+    typename SimType::Tunables t;
 
     ParamSeq::const_iterator  it_seq  = p.begin();
     ParamDesc::const_iterator it_desc = param_desc_.begin();
-    // interactive 调速器参数上下限
-    t.governor = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc_);
-    // WALT HMP 调速器参数上下限
-    t.sched = TranslateBlock<WaltHmp::Tunables>(it_seq, it_desc, soc_);
-    // 输入升频参数上下限
-    t.boost = TranslateBlock<InputBoostWalt::Tunables>(it_seq, it_desc, soc_);
-
-    // 时长类参数取整到一个timer_rate
-    int idx = 0;
-    for (const auto &cluster : soc_->clusters_) {
-        auto & tunable       = t.governor.t[idx];
-        double timer_quantum = t.sched.timer_rate;
-
-        tunable.min_sample_time     = std::max(1.0, std::round(tunable.min_sample_time / timer_quantum));
-        tunable.max_freq_hysteresis = std::max(1.0, std::round(tunable.max_freq_hysteresis / timer_quantum));
-
-        int n_opp   = cluster.model_.opp_model.size();
-        int n_above = std::min(ABOVE_DELAY_MAX_LEN, n_opp);
-
-        for (int i = 0; i < n_above; ++i) {
-            tunable.above_hispeed_delay[i] = std::max(1.0, std::round(tunable.above_hispeed_delay[i] / timer_quantum));
-        }
-        idx++;
-    }
-
-    // 平衡的双集群HMP，如sd625，负载迁移阈值使用45/45
-    if (soc_->clusters_.size() < 2) {
-        t.sched.sched_downmigrate = 45;
-        t.sched.sched_upmigrate   = 45;
-    }
-    return t;
-}
-
-template <>
-void OpengaAdapter<SimQcomBL>::InitParamDesc(const ParamDescCfg &p) {
-    // interactive 调速器参数上下限
-    DefineBlock<GovernorTs<Interactive>>(param_desc_, p, soc_);
-    // WALT HMP 调速器参数上下限
-    DefineBlock<WaltHmp::Tunables>(param_desc_, p, soc_);
-    // 输入升频参数上下限
-    DefineBlock<InputBoostWalt::Tunables>(param_desc_, p, soc_);
-    param_len_ = param_desc_.size();
-}
-
-template <>
-SimQcomBL::Tunables OpengaAdapter<SimQcomBL>::GenerateDefaultTunables(void) const {
-    SimQcomBL::Tunables t;
-
-    // interactive 调速器参数上下限
-    int idx = 0;
-    for (const auto &cluster : soc_->clusters_)
-        t.governor.t[idx++] = Interactive::Tunables(cluster);
-    // WALT HMP 调速器参数上下限
-    t.sched = WaltHmp::Tunables();
-    // 输入升频参数上下限
-    t.boost = InputBoostWalt::Tunables(soc_);
-
-    return t;
-}
-
-template <>
-typename SimBL::Tunables OpengaAdapter<SimBL>::TranslateParamSeq(const ParamSeq &p) const {
-    SimBL::Tunables t;
-
-    ParamSeq::const_iterator  it_seq  = p.begin();
-    ParamDesc::const_iterator it_desc = param_desc_.begin();
-    // interactive 调速器参数上下限
-    t.governor = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc_);
-    // PELT HMP 调速器参数上下限
-    t.sched = TranslateBlock<PeltHmp::Tunables>(it_seq, it_desc, soc_);
-    // 输入升频参数上下限
-    t.boost = TranslateBlock<InputBoostPelt::Tunables>(it_seq, it_desc, soc_);
+    // cpufreq调速器参数上下限
+    t.governor = TranslateBlock<GovernorTs<typename SimType::Governor>>(it_seq, it_desc, soc_);
+    // sched任务调度器参数上下限
+    t.sched = TranslateBlock<typename SimType::Sched::Tunables>(it_seq, it_desc, soc_);
+    // boost升频参数上下限
+    t.boost = TranslateBlock<typename SimType::Boost::Tunables>(it_seq, it_desc, soc_);
 
     // 时长类参数取整到一个timer_rate
     int idx = 0;
@@ -552,30 +486,28 @@ typename SimBL::Tunables OpengaAdapter<SimBL>::TranslateParamSeq(const ParamSeq 
     return t;
 }
 
-template <>
-void OpengaAdapter<SimBL>::InitParamDesc(const ParamDescCfg &p) {
-    // interactive 调速器参数上下限
-    DefineBlock<GovernorTs<Interactive>>(param_desc_, p, soc_);
-    // PELT HMP 调速器参数上下限
-    DefineBlock<PeltHmp::Tunables>(param_desc_, p, soc_);
-    // 输入升频参数上下限
-    DefineBlock<InputBoostPelt::Tunables>(param_desc_, p, soc_);
+template <typename SimType>
+void OpengaAdapter<SimType>::InitParamDesc(const ParamDescCfg &p) {
+    // cpufreq调速器参数上下限
+    DefineBlock<GovernorTs<typename SimType::Governor>>(param_desc_, p, soc_);
+    // sched任务调度器参数上下限
+    DefineBlock<typename SimType::Sched::Tunables>(param_desc_, p, soc_);
+    // boost升频参数上下限
+    DefineBlock<typename SimType::Boost::Tunables>(param_desc_, p, soc_);
     param_len_ = param_desc_.size();
 }
 
-template <>
-SimBL::Tunables OpengaAdapter<SimBL>::GenerateDefaultTunables(void) const {
-    SimBL::Tunables t;
-
-    // interactive 调速器参数上下限
+template <typename SimType>
+typename SimType::Tunables OpengaAdapter<SimType>::GenerateDefaultTunables(void) const {
+    typename SimType::Tunables t;
+    // cpufreq调速器参数上下限
     int idx = 0;
     for (const auto &cluster : soc_->clusters_)
-        t.governor.t[idx++] = Interactive::Tunables(cluster);
-    // PELT HMP 调速器参数上下限
-    t.sched = PeltHmp::Tunables();
-    // 输入升频参数上下限
-    t.boost = InputBoostPelt::Tunables(soc_);
-
+        t.governor.t[idx++] = typename SimType::Governor::Tunables(cluster);
+    // sched任务调度器参数上下限
+    t.sched = typename SimType::Sched::Tunables();
+    // boost升频参数上下限
+    t.boost = typename SimType::Boost::Tunables(soc_);
     return t;
 }
 

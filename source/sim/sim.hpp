@@ -33,6 +33,10 @@ public:
         int idle_base_mw;
     } MiscConst;
 
+    using Governor = GovernorT;
+    using Sched    = SchedT;
+    using Boost    = BoostT;
+
     Sim() = delete;
     Sim(const Tunables &tunables, const MiscConst &misc) : tunables_(tunables), misc_(misc){};
 
