@@ -500,6 +500,7 @@ UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
     t.little     = iblk.t[0];
     t.big        = iblk.t[1];
+    t.enabled    = true;
 
     return std::move(t);
 }
@@ -534,8 +535,34 @@ UperfBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
     t.little     = iblk.t[0];
     t.big        = iblk.t[1];
+    t.enabled    = true;
 
     return std::move(t);
+}
+
+template <typename Boost>
+bool IsSupportBoost(const Soc *soc) {
+    return false;
+}
+
+template <>
+bool IsSupportBoost<InputBoostWalt>(const Soc *soc) {
+    return soc->GetInputBoostFeature();
+}
+
+template <>
+bool IsSupportBoost<InputBoostPelt>(const Soc *soc) {
+    return soc->GetInputBoostFeature();
+}
+
+template <>
+bool IsSupportBoost<UperfBoostPelt>(const Soc *soc) {
+    return true;
+}
+
+template <>
+bool IsSupportBoost<UperfBoostWalt>(const Soc *soc) {
+    return true;
 }
 
 template <typename SimType>
@@ -548,9 +575,12 @@ typename SimType::Tunables OpengaAdapter<SimType>::TranslateParamSeq(const Param
     t.governor = TranslateBlock<GovernorTs<typename SimType::Governor>>(it_seq, it_desc, soc_);
     // sched任务调度器参数上下限
     t.sched = TranslateBlock<typename SimType::Sched::Tunables>(it_seq, it_desc, soc_);
-    // boost升频参数上下限
-    t.boost = TranslateBlock<typename SimType::Boost::Tunables>(it_seq, it_desc, soc_);
-
+    // 是否启用boost
+    t.has_boost = IsSupportBoost<typename SimType::Boost>(soc_);
+    if (t.has_boost) {
+        // boost升频参数上下限
+        t.boost = TranslateBlock<typename SimType::Boost::Tunables>(it_seq, it_desc, soc_);
+    }
     return t;
 }
 
@@ -560,8 +590,11 @@ void OpengaAdapter<SimType>::InitParamDesc(const ParamDescCfg &p) {
     DefineBlock<GovernorTs<typename SimType::Governor>>(param_desc_, p, soc_);
     // sched任务调度器参数上下限
     DefineBlock<typename SimType::Sched::Tunables>(param_desc_, p, soc_);
-    // boost升频参数上下限
-    DefineBlock<typename SimType::Boost::Tunables>(param_desc_, p, soc_);
+    // 是否启用boost
+    if (IsSupportBoost<typename SimType::Boost>(soc_)) {
+        // boost升频参数上下限
+        DefineBlock<typename SimType::Boost::Tunables>(param_desc_, p, soc_);
+    }
     param_len_ = param_desc_.size();
 }
 
@@ -574,8 +607,11 @@ typename SimType::Tunables OpengaAdapter<SimType>::GenerateDefaultTunables(void)
         t.governor.t[idx++] = typename SimType::Governor::Tunables(cluster);
     // sched任务调度器参数上下限
     t.sched = typename SimType::Sched::Tunables();
-    // boost升频参数上下限
-    t.boost = typename SimType::Boost::Tunables(soc_);
+    // 是否启用boost
+    if (IsSupportBoost<typename SimType::Boost>(soc_)) {
+        // boost升频参数上下限
+        t.boost = typename SimType::Boost::Tunables(soc_);
+    }
     return t;
 }
 

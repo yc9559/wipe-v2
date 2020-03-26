@@ -52,13 +52,14 @@ template <typename GovernorT, typename SchedT>
 class UperfBoost : public Boost<GovernorT, SchedT> {
 public:
     struct Tunables {
-        int                 min_freq[2];
-        int                 max_freq[2];
-        int                 sched_up;
-        int                 sched_down;
-        GovernorT::Tunables little;
-        GovernorT::Tunables big;
-        Tunables() : min_freq{0, 0}, max_freq{0, 0}, sched_up(0), sched_down(0) {}
+        int                          min_freq[2];
+        int                          max_freq[2];
+        int                          sched_up;
+        int                          sched_down;
+        typename GovernorT::Tunables little;
+        typename GovernorT::Tunables big;
+        bool                         enabled;
+        Tunables() : min_freq{0, 0}, max_freq{0, 0}, sched_up(0), sched_down(0), enabled(false) {}
         Tunables(const Soc *soc);
     };
 

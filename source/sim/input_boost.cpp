@@ -45,6 +45,38 @@ void InputBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
     }
 };
 
+template <>
+UperfBoost<Interactive, WaltHmp>::Tunables::Tunables(const Soc *soc) {
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = WaltHmp::Tunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        const auto &cl = soc->clusters_[i];
+        min_freq[i]    = cl.freq_floor_to_opp(cl.model_.max_freq * 0.6);
+        max_freq[i]    = cl.model_.max_freq;
+    }
+    sched_up   = sched_tunables.sched_upmigrate;
+    sched_down = sched_tunables.sched_downmigrate;
+    little     = Interactive::Tunables(soc->clusters_[0]);
+    big        = Interactive::Tunables(soc->clusters_[1]);
+    enabled    = true;
+}
+
+template <>
+UperfBoost<Interactive, PeltHmp>::Tunables::Tunables(const Soc *soc) {
+    int  cluster_num    = soc->clusters_.size();
+    auto sched_tunables = PeltHmp::Tunables();
+    for (int i = 0; i < cluster_num; ++i) {
+        const auto &cl = soc->clusters_[i];
+        min_freq[i]    = cl.freq_floor_to_opp(cl.model_.max_freq * 0.6);
+        max_freq[i]    = cl.model_.max_freq;
+    }
+    sched_up   = sched_tunables.up_threshold;
+    sched_down = sched_tunables.down_threshold;
+    little     = Interactive::Tunables(soc->clusters_[0]);
+    big        = Interactive::Tunables(soc->clusters_[1]);
+    enabled    = true;
+}
+
 template <typename GovernorT, typename SchedT>
 void UperfBoost<GovernorT, SchedT>::DoBoost() {
     if (is_original_inited_ == false) {
@@ -61,6 +93,9 @@ void UperfBoost<GovernorT, SchedT>::DoResume() {
 
 template <typename GovernorT, typename SchedT>
 void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cur_quantum) {
+    if (tunables_.enabled == false)
+        return;
+
     if (has_render) {
         this->render_stop_quantum_ = cur_quantum;
     }
@@ -77,6 +112,7 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
     }
 };
 
+template <>
 void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interactive, WaltHmp>::Tunables &t) {
     auto soc    = this->env_.soc;
     auto little = this->env_.little;
@@ -96,6 +132,7 @@ void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interacti
     big->SetTunables(t.big);
 }
 
+template <>
 void UperfBoost<Interactive, PeltHmp>::Apply(const typename UperfBoost<Interactive, PeltHmp>::Tunables &t) {
     auto soc    = this->env_.soc;
     auto little = this->env_.little;
@@ -115,6 +152,7 @@ void UperfBoost<Interactive, PeltHmp>::Apply(const typename UperfBoost<Interacti
     big->SetTunables(t.big);
 }
 
+template <>
 void UperfBoost<Interactive, WaltHmp>::Backup() {
     const auto soc    = this->env_.soc;
     const auto little = this->env_.little;
@@ -133,6 +171,7 @@ void UperfBoost<Interactive, WaltHmp>::Backup() {
     original_.big        = big->GetTunables();
 }
 
+template <>
 void UperfBoost<Interactive, PeltHmp>::Backup() {
     const auto soc    = this->env_.soc;
     const auto little = this->env_.little;

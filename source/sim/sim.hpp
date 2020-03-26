@@ -26,6 +26,7 @@ public:
         GovernorTs<GovernorT>     governor;
         typename SchedT::Tunables sched;
         typename BoostT::Tunables boost;
+        bool                      has_boost;
     } Tunables;
 
     typedef struct _MiscConst {
@@ -61,14 +62,15 @@ public:
         SchedT sched(sched_cfg);
 
         // 使用参数实例化输入升频
-        typename BoostT::SysEnv boost_env;
-        boost_env.soc    = &soc;
-        boost_env.little = &little_governor;
-        boost_env.big    = &big_governor;
-        boost_env.sched  = &sched;
-        BoostT boost(tunables_.boost, boost_env);
-        if (soc.GetInputBoostFeature() == false)
-            boost = BoostT();
+        BoostT boost;
+        if (tunables_.has_boost) {
+            typename BoostT::SysEnv boost_env;
+            boost_env.soc    = &soc;
+            boost_env.little = &little_governor;
+            boost_env.big    = &big_governor;
+            boost_env.sched  = &sched;
+            boost            = BoostT(tunables_.boost, boost_env);
+        }
 
         int quantum_cnt = 0;
         int capacity    = soc.clusters_[0].CalcCapacity();
