@@ -164,8 +164,8 @@ void TunableToStream<UperfBoostWalt::Tunables>(std::ostringstream &os, const Upe
     os << "sched_down: " << t.sched_down << endl;
 
     GovernorTs<Interactive> ts;
-    ts.t[0] = t.little;
-    ts.t[1] = t.big;
+    ts.t[soc.GetLittleClusterIdx()] = t.little;
+    ts.t[soc.GetBigClusterIdx()]    = t.big;
     TunableToStream<GovernorTs<Interactive>>(os, ts, soc);
     os << endl;
 }

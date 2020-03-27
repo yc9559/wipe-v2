@@ -499,8 +499,8 @@ UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     t.sched_up   = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = std::max(t.sched_down, t.sched_up);
     auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
-    t.little     = iblk.t[0];
-    t.big        = iblk.t[1];
+    t.little     = iblk.t[soc->GetLittleClusterIdx()];
+    t.big        = iblk.t[soc->GetBigClusterIdx()];
     t.enabled    = true;
 
     return std::move(t);
@@ -534,8 +534,8 @@ UperfBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     t.sched_up   = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = std::max(t.sched_down, t.sched_up);
     auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
-    t.little     = iblk.t[0];
-    t.big        = iblk.t[1];
+    t.little     = iblk.t[soc->GetLittleClusterIdx()];
+    t.big        = iblk.t[soc->GetBigClusterIdx()];
     t.enabled    = true;
 
     return std::move(t);

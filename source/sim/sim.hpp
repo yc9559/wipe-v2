@@ -44,18 +44,19 @@ public:
     // 仿真运行，得到亮屏考察每一时间片的性能输出和功耗，以及灭屏的总耗电
     void Run(const Workload &workload, const Workload &idleload, Soc soc, SimResultPack *rp) {
         // 常量计算
-        const int cl_big_idx    = soc.clusters_.size() - 1;
+        const int cl_little_idx = soc.GetLittleClusterIdx();
+        const int cl_big_idx    = soc.GetBigClusterIdx();
         const int base_pwr      = misc_.working_base_mw * 100;
         const int idle_base_pwr = misc_.idle_base_mw * 100;
 
         // 使用参数实例化CPU调速器仿真
-        auto little_governor = GovernorT(tunables_.governor.t[0], &soc.clusters_[0]);
+        auto little_governor = GovernorT(tunables_.governor.t[cl_little_idx], &soc.clusters_[cl_little_idx]);
         auto big_governor    = GovernorT(tunables_.governor.t[cl_big_idx], &soc.clusters_[cl_big_idx]);
 
         // 使用参数实例化调度器仿真
         typename SchedT::Cfg sched_cfg;
         sched_cfg.tunables        = tunables_.sched;
-        sched_cfg.little          = &soc.clusters_[0];
+        sched_cfg.little          = &soc.clusters_[cl_little_idx];
         sched_cfg.big             = &soc.clusters_[cl_big_idx];
         sched_cfg.governor_little = &little_governor;
         sched_cfg.governor_big    = &big_governor;

@@ -56,8 +56,8 @@ UperfBoost<Interactive, WaltHmp>::Tunables::Tunables(const Soc *soc) {
     }
     sched_up   = sched_tunables.sched_upmigrate;
     sched_down = sched_tunables.sched_downmigrate;
-    little     = Interactive::Tunables(soc->clusters_[0]);
-    big        = Interactive::Tunables(soc->clusters_[1]);
+    little     = Interactive::Tunables(soc->clusters_[soc->GetLittleClusterIdx()]);
+    big        = Interactive::Tunables(soc->clusters_[soc->GetBigClusterIdx()]);
     enabled    = true;
 }
 
@@ -72,8 +72,8 @@ UperfBoost<Interactive, PeltHmp>::Tunables::Tunables(const Soc *soc) {
     }
     sched_up   = sched_tunables.up_threshold;
     sched_down = sched_tunables.down_threshold;
-    little     = Interactive::Tunables(soc->clusters_[0]);
-    big        = Interactive::Tunables(soc->clusters_[1]);
+    little     = Interactive::Tunables(soc->clusters_[soc->GetLittleClusterIdx()]);
+    big        = Interactive::Tunables(soc->clusters_[soc->GetBigClusterIdx()]);
     enabled    = true;
 }
 

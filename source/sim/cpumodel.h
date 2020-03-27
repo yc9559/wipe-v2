@@ -122,10 +122,15 @@ public:
 
     Soc(const std::string &model_file);
     ~Soc(){};
+
     IntraType GetIntraType(void) const { return intra_type_; }
     SchedType GetSchedType(void) const { return sched_type_; }
     bool      GetInputBoostFeature(void) const { return input_boost_; }
-    int       GetEnoughCapacity(void) const {
+
+    int GetLittleClusterIdx(void) const { return 0; }
+    int GetBigClusterIdx(void) const { return clusters_.size() - 1; }
+
+    int GetEnoughCapacity(void) const {
         return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * enough_capacity_pct_);
     }
 
