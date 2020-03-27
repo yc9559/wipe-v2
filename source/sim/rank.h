@@ -28,8 +28,11 @@ public:
         int    seq_lag_l1;
         int    seq_lag_l2;
         int    seq_lag_max;
+        double enough_penalty; 
         int    batt_partition_len;
     } MiscConst;
+
+    using LagSeq = std::vector<float>;
 
     Rank() = delete;
     Rank(const Score &default_score, const MiscConst &misc) : misc_(misc), default_score_(default_score){};
@@ -45,7 +48,7 @@ private:
         }
     }
 
-    double PerfPartitionEval(const std::vector<bool> &lag_seq) const;
+    double PerfPartitionEval(const LagSeq &lag_seq) const;
     double BattPartitionEval(const SimSeq &power_seq) const;
 
     double EvalPerformance(const Workload &workload, const Soc &soc, const SimSeq &capacity_log);

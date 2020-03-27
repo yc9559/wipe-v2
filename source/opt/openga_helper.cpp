@@ -55,6 +55,7 @@ void OpengaAdapter<SimType>::ParseCfgFile(const std::string &ga_cfg_file) {
     rank_misc_.seq_lag_l1          = misc["eval.perf.seqLagL1"];
     rank_misc_.seq_lag_l2          = misc["eval.perf.seqLagL2"];
     rank_misc_.seq_lag_max         = misc["eval.perf.seqLagMax"];
+    rank_misc_.enough_penalty      = misc["eval.perf.enoughPenalty"];
     rank_misc_.complexity_fraction = misc["eval.complexityFraction"];
 
     // 解析参数搜索空间范围

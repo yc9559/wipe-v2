@@ -1,7 +1,9 @@
 #include "rank.h"
+
 #include <numeric>
 
-Rank::Score Rank::Eval(const Workload &workload, const Workload &idleload, const SimResultPack &rp, Soc soc, bool is_init) {
+Rank::Score Rank::Eval(const Workload &workload, const Workload &idleload, const SimResultPack &rp, Soc soc,
+                       bool is_init) {
     if (is_init) {
         default_score_.ref_power_comsumed = InitRefBattPartition(rp.onscreen.power);
     }
@@ -19,7 +21,21 @@ Rank::Score Rank::Eval(const Workload &workload, const Workload &idleload, const
 
 double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const SimSeq &capacity_log) {
     const int enough_capacity = soc.GetEnoughCapacity();
-    auto is_lag = [=](int required, int provided) { return (provided < required) && (provided < enough_capacity); };
+
+    auto is_lag    = [=](int required, int provided) { return provided < required; };
+    auto is_enough = [=](int required, int provided) { return provided >= enough_capacity; };
+    auto calc_lag  = [=](int required, int provided) {
+        if (is_lag(required, provided)) {
+            if (is_enough(required, provided)) {
+                return misc_.enough_penalty;
+            } else {
+                return 1.0;
+            }
+        } else {
+            return 0.0;
+        }
+        return 0.0;
+    };
 
     // std::vector<bool> common_lag_seq;
     // common_lag_seq.reserve(capacity_log.size());
@@ -30,7 +46,7 @@ double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const Sim
     //     ++iter_log;
     // }
 
-    std::vector<bool> render_lag_seq;
+    LagSeq render_lag_seq;
     render_lag_seq.reserve(workload.render_load_.size());
 
     for (const auto &r : workload.render_load_) {
@@ -39,7 +55,7 @@ double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const Sim
         aggreated_capacity += capacity_log[r.window_idxs[1]] * r.window_quantums[1];
         aggreated_capacity += capacity_log[r.window_idxs[2]] * r.window_quantums[2];
         aggreated_capacity /= workload.frame_quantum_;
-        render_lag_seq.push_back(is_lag(r.frame_load, aggreated_capacity));
+        render_lag_seq.push_back(calc_lag(r.frame_load, aggreated_capacity));
     }
 
     // double common_lag_ratio = PerfPartitionEval(common_lag_seq);
@@ -51,35 +67,36 @@ double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const Sim
     return (score / default_score_.performance);
 }
 
-double Rank::PerfPartitionEval(const std::vector<bool> &lag_seq) const {
+double Rank::PerfPartitionEval(const LagSeq &lag_seq) const {
     const int partition_len = misc_.perf_partition_len;
     const int n_partition   = lag_seq.size() / partition_len;
     const int seq_lag_l1    = misc_.seq_lag_l1;
     const int seq_lag_l2    = misc_.seq_lag_l2;
     const int seq_lag_max   = misc_.seq_lag_max;
 
-    std::vector<int> period_lag_arr;
+    LagSeq period_lag_arr;
     period_lag_arr.reserve(n_partition);
 
-    int cnt            = 1;
-    int period_lag_cnt = 0;
-    int n_recent_lag   = 0;
-    for (const auto &is_lag : lag_seq) {
+    int   cnt              = 1;
+    int   n_recent_lag     = 0;
+    float period_lag_score = 0.0;
+    for (const auto &lag_scale : lag_seq) {
+        bool is_lag = (lag_scale > 0);
         if (cnt == partition_len) {
-            period_lag_arr.push_back(period_lag_cnt);
-            period_lag_cnt = 0;
-            cnt            = 0;
+            period_lag_arr.push_back(period_lag_score);
+            period_lag_score = 0.0;
+            cnt              = 0;
         }
         if (!is_lag) {
             n_recent_lag = n_recent_lag >> 1;
         }
         n_recent_lag = std::min(seq_lag_max, n_recent_lag + is_lag);
-        period_lag_cnt += (n_recent_lag >= seq_lag_l1);
-        period_lag_cnt += (n_recent_lag >= seq_lag_l2);
+        period_lag_score += lag_scale * (n_recent_lag >= seq_lag_l1);
+        period_lag_score += lag_scale * (n_recent_lag >= seq_lag_l2);
         ++cnt;
     }
 
-    uint64_t sum = 0;
+    double sum = 0;
     for (const auto &l : period_lag_arr) {
         sum += l * l;
     }
