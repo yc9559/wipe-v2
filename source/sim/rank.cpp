@@ -21,12 +21,14 @@ Rank::Score Rank::Eval(const Workload &workload, const Workload &idleload, const
 
 double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const SimSeq &capacity_log) {
     const int enough_capacity = soc.GetEnoughCapacity();
+    const int max_capacity    = soc.GetMaxCapacity();
 
-    auto is_lag    = [=](int required, int provided) { return provided < required; };
-    auto is_enough = [=](int required, int provided) { return provided >= enough_capacity; };
-    auto calc_lag  = [=](int required, int provided) {
-        if (is_lag(required, provided)) {
-            if (is_enough(required, provided)) {
+    auto calc_lag = [=](int required, int provided) {
+        if (provided >= max_capacity) {
+            return 0.0;
+        }
+        if (provided < required) {
+            if (provided >= enough_capacity) {
                 return misc_.enough_penalty;
             } else {
                 return 1.0;

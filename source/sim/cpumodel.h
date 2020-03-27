@@ -134,6 +134,10 @@ public:
         return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * enough_capacity_pct_);
     }
 
+    int GetMaxCapacity(void) const {
+        return (clusters_.back().model_.max_freq * clusters_.back().model_.efficiency * 98);
+    }
+
     std::string          name_;
     std::vector<Cluster> clusters_;
 
