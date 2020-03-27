@@ -15,22 +15,24 @@ std::string TargetLoadsToStr(const Interactive::Tunables &t, const Cluster &cl) 
     using namespace std;
     ostringstream buf;
 
-    auto get_freq      = [=](int idx) { return cl.model_.opp_model[idx].freq; };
-    int  n_opp         = cl.model_.opp_model.size();
-    int  n_targetloads = min(TARGET_LOAD_MAX_LEN, n_opp);
+    int n_opp         = cl.model_.opp_model.size();
+    int n_targetloads = min(TARGET_LOAD_MAX_LEN, n_opp);
 
-    int min_freq = cl.model_.min_freq;
-    int prev_tg  = -1;
+    const int min_freq = cl.GetMinfreq();
+    const int max_freq = cl.GetMaxfreq();
+
+    int prev_tl = -1;
     for (int i = 0; i < n_targetloads; ++i) {
-        if (prev_tg == t.target_loads[i]) {
+        int f  = cl.GetOpp(i);
+        int tl = t.target_loads[i];
+        if (prev_tl == tl)
             continue;
-        }
-        if (get_freq(i) == min_freq) {
-            buf << (int)t.target_loads[i];
-            prev_tg = t.target_loads[i];
-        } else if (get_freq(i) > min_freq) {
-            buf << ' ' << Mhz2kHz(get_freq(i)) << ":" << (int)t.target_loads[i];
-            prev_tg = t.target_loads[i];
+        if (f == min_freq) {
+            buf << (int)tl;
+            prev_tl = tl;
+        } else if (f > min_freq && f <= max_freq) {
+            buf << ' ' << Mhz2kHz(f) << ":" << (int)tl;
+            prev_tl = tl;
         } else {
             continue;
         }
@@ -43,22 +45,25 @@ std::string HispeedDelayToStr(const Interactive::Tunables &t, const Cluster &cl,
     using namespace std;
     ostringstream buf;
 
-    auto get_freq       = [=](int idx) { return cl.model_.opp_model[idx].freq; };
     auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * timer_rate) - 2); };
     int  n_opp          = cl.model_.opp_model.size();
     int  n_above        = min(ABOVE_DELAY_MAX_LEN, n_opp) - 1;  // 最高频的above_delay并没有用
 
-    int prev_above = -1;
+    const int max_freq = cl.GetMaxfreq();
+    const int hispeed  = cl.freq_floor_to_opp(t.hispeed_freq);
+
+    int prev_ahd = -1;
     for (int i = 0; i < n_above; ++i) {
-        if (prev_above == t.above_hispeed_delay[i]) {
+        int f   = cl.GetOpp(i);
+        int ahd = t.above_hispeed_delay[i];
+        if (prev_ahd == ahd)
             continue;
-        }
-        if (get_freq(i) == t.hispeed_freq) {
-            buf << multiple_to_us(t.above_hispeed_delay[i]);
-            prev_above = t.above_hispeed_delay[i];
-        } else if (get_freq(i) > t.hispeed_freq) {
-            buf << ' ' << Mhz2kHz(get_freq(i)) << ":" << multiple_to_us(t.above_hispeed_delay[i]);
-            prev_above = t.above_hispeed_delay[i];
+        if (f == hispeed) {
+            buf << multiple_to_us(ahd);
+            prev_ahd = ahd;
+        } else if (f > hispeed && f <= max_freq) {
+            buf << ' ' << Mhz2kHz(f) << ":" << multiple_to_us(ahd);
+            prev_ahd = ahd;
         } else {
             continue;
         }
@@ -78,12 +83,13 @@ void TunableToStream<GovernorTs<Interactive>>(std::ostringstream &os, const Gove
     using namespace std;
     int cluster_num = soc.clusters_.size();
     for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
-        const auto &g = t.t[idx_cluster];
+        const auto &g       = t.t[idx_cluster];
+        const int   hispeed = soc.clusters_[idx_cluster].freq_floor_to_opp(g.hispeed_freq);
 
         auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * 2) - 2); };
 
         os << "[interactive] cluster " << idx_cluster << endl << endl;
-        os << "hispeed_freq: " << Mhz2kHz(g.hispeed_freq) << endl;
+        os << "hispeed_freq: " << Mhz2kHz(hispeed) << endl;
         os << "go_hispeed_load: " << g.go_hispeed_load << endl;
         os << "min_sample_time: " << multiple_to_us(g.min_sample_time) << endl;
         os << "max_freq_hysteresis: " << multiple_to_us(g.max_freq_hysteresis) << endl;
@@ -163,10 +169,18 @@ void TunableToStream<UperfBoostWalt::Tunables>(std::ostringstream &os, const Upe
     os << "sched_up  : " << t.sched_up << endl;
     os << "sched_down: " << t.sched_down << endl;
 
+    int little_cl_idx = soc.GetLittleClusterIdx();
+    int big_cl_idx    = soc.GetBigClusterIdx();
+    Soc soc_boosted   = soc;
+    soc_boosted.clusters_[little_cl_idx].SetMinfreq(t.min_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMinfreq(t.min_freq[big_cl_idx]);
+    soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
+
     GovernorTs<Interactive> ts;
-    ts.t[soc.GetLittleClusterIdx()] = t.little;
-    ts.t[soc.GetBigClusterIdx()]    = t.big;
-    TunableToStream<GovernorTs<Interactive>>(os, ts, soc);
+    ts.t[little_cl_idx] = t.little;
+    ts.t[big_cl_idx]    = t.big;
+    TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
     os << endl;
 }
 
@@ -182,10 +196,18 @@ void TunableToStream<UperfBoostPelt::Tunables>(std::ostringstream &os, const Upe
     os << "sched_up  : " << t.sched_up << endl;
     os << "sched_down: " << t.sched_down << endl;
 
+    int little_cl_idx = soc.GetLittleClusterIdx();
+    int big_cl_idx    = soc.GetBigClusterIdx();
+    Soc soc_boosted   = soc;
+    soc_boosted.clusters_[little_cl_idx].SetMinfreq(t.min_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMinfreq(t.min_freq[big_cl_idx]);
+    soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
+
     GovernorTs<Interactive> ts;
-    ts.t[0] = t.little;
-    ts.t[1] = t.big;
-    TunableToStream<GovernorTs<Interactive>>(os, ts, soc);
+    ts.t[little_cl_idx] = t.little;
+    ts.t[big_cl_idx]    = t.big;
+    TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
     os << endl;
 }
 

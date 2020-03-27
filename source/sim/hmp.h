@@ -45,7 +45,7 @@ protected:
 };
 
 inline int Hmp::LoadToBusyPct(const Cluster *c, uint64_t load) const {
-    return (load / (c->cur_freq_ * c->model_.efficiency));
+    return (load / (c->GetCurfreq() * c->model_.efficiency));
 }
 
 // 外层保证已执行adaptload，负载百分比不超过100%
@@ -54,7 +54,7 @@ inline int Hmp::CalcPower(const int *loads) const {
     const int idle_load_pcts[] = {1, 0, 0, 0};
     int       load_pcts[NLoadsMax];
     for (int i = 0; i < NLoadsMax; ++i) {
-        load_pcts[i] = loads[i] / (active_->model_.efficiency * active_->cur_freq_);
+        load_pcts[i] = loads[i] / (active_->model_.efficiency * active_->GetCurfreq());
     }
 
     int pwr = 0;

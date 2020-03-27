@@ -30,25 +30,29 @@ public:
     int  freq_ceiling_to_opp(int freq) const;
     int  CalcPower(const int *load_pcts) const;
     int  CalcCapacity(void) const;
+    int  GetBusyPct(void) const { return busy_pct_; }
+    int  GetMinfreq(void) const { return min_freq_; }
+    int  GetMaxfreq(void) const { return max_freq_; }
+    int  GetCurfreq(void) const { return cur_freq_; }
+    int  GetOpp(int idx) const { return model_.opp_model[idx].freq; }
+    void SetBusyPct(int load) { busy_pct_ = load; }
     void SetMinfreq(int freq);
     void SetMaxfreq(int freq);
     void SetCurfreq(int freq);
 
     const Model model_;
-    int         cur_freq_;
-    int         busy_pct_;
 
 private:
     Cluster();
-    int GetOpp(int idx) const;
+
+    int busy_pct_;
+    int min_freq_;
+    int max_freq_;
+    int cur_freq_;
     int min_opp_idx_;
     int max_opp_idx_;
     int cur_opp_idx_;
 };
-
-inline int Cluster::GetOpp(int idx) const {
-    return model_.opp_model[idx].freq;
-}
 
 // 在给定下标闭区间内，找到 >=@freq的最低频点对应的opp频点序号
 inline int Cluster::FindFreqIdx(int freq, int left, int right) const {
@@ -84,14 +88,16 @@ inline int Cluster::freq_ceiling_to_opp(int freq) const {
 
 inline void Cluster::SetMinfreq(int freq) {
     min_opp_idx_ = FindFreqIdx(freq, -1, -1);
-    if (cur_freq_ < freq)
-        SetCurfreq(freq);
+    min_freq_    = GetOpp(min_opp_idx_);
+    if (cur_freq_ < min_freq_)
+        SetCurfreq(min_freq_);
 }
 
 inline void Cluster::SetMaxfreq(int freq) {
     max_opp_idx_ = FindFreqIdx(freq, -1, -1);
-    if (cur_freq_ > freq)
-        SetCurfreq(freq);
+    max_freq_    = GetOpp(max_opp_idx_);
+    if (cur_freq_ > max_freq_)
+        SetCurfreq(max_freq_);
 }
 
 inline void Cluster::SetCurfreq(int freq) {

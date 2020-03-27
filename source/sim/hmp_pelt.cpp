@@ -152,12 +152,12 @@ int PeltHmp::SchedulerTick(int max_load, const int *loads, int n_load, int now) 
         max_load_sum_    = 0;
 
         // 调频器仍然使用定期负载采样
-        idle_->busy_pct_   = 0;
-        active_->busy_pct_ = LoadToBusyPct(active_, max_load_avg);
+        idle_->SetBusyPct(0);
+        active_->SetBusyPct(LoadToBusyPct(active_, max_load_avg));
 
-        little_->SetCurfreq(governor_little_->InteractiveTimer(little_->busy_pct_, governor_cnt_));
+        little_->SetCurfreq(governor_little_->InteractiveTimer(little_->GetBusyPct(), governor_cnt_));
         if (cluster_num_ > 1)
-            big_->SetCurfreq(governor_big_->InteractiveTimer(big_->busy_pct_, governor_cnt_));
+            big_->SetCurfreq(governor_big_->InteractiveTimer(big_->GetBusyPct(), governor_cnt_));
 
         ++governor_cnt_;
     }
