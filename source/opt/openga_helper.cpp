@@ -475,9 +475,13 @@ InputBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
 template <>
 void DefineBlock<UperfBoostWalt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
     for (const auto &cluster : soc->clusters_) {
-        ParamDescElement freq = {cluster.model_.min_freq, cluster.model_.max_freq};
-        desc.push_back(freq);
-        desc.push_back(freq);
+        // 最大频率不能限制太多，否则影响突发性能，选择0.7*最大主频和1.2g较高的值
+        int max_freq_floor = 0.7 * cluster.model_.max_freq;
+        max_freq_floor     = std::min(std::max(1200, max_freq_floor), cluster.model_.max_freq);
+        auto min_range     = ParamDescElement{cluster.model_.min_freq, cluster.model_.max_freq};
+        auto max_range     = ParamDescElement{max_freq_floor, cluster.model_.max_freq};
+        desc.push_back(min_range);
+        desc.push_back(max_range);
     }
     desc.push_back(p.sched_downmigrate);
     desc.push_back(p.sched_upmigrate);
@@ -510,9 +514,13 @@ UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
 template <>
 void DefineBlock<UperfBoostPelt::Tunables>(ParamDesc &desc, const ParamDescCfg &p, const Soc *soc) {
     for (const auto &cluster : soc->clusters_) {
-        ParamDescElement freq = {cluster.model_.min_freq, cluster.model_.max_freq};
-        desc.push_back(freq);
-        desc.push_back(freq);
+        // 最大频率不能限制太多，否则影响突发性能，选择0.7*最大主频和1.2g较高的值
+        int max_freq_floor = 0.7 * cluster.model_.max_freq;
+        max_freq_floor     = std::min(std::max(1200, max_freq_floor), cluster.model_.max_freq);
+        auto min_range     = ParamDescElement{cluster.model_.min_freq, cluster.model_.max_freq};
+        auto max_range     = ParamDescElement{max_freq_floor, cluster.model_.max_freq};
+        desc.push_back(min_range);
+        desc.push_back(max_range);
     }
     desc.push_back(p.down_threshold);
     desc.push_back(p.up_threshold);
