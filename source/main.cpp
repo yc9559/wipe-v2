@@ -17,6 +17,7 @@ void DoOpt(Soc &soc, const Workload &work, const Workload &idle) {
     dumper.DumpToTXT(ret);
     dumper.DumpToCSV(ret);
     dumper.DumpToShellScript(ret);
+    dumper.DumpToUperfJson(ret);
 }
 
 int main() {

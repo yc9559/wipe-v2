@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "json.hpp"
 #include "misc.h"
 
 std::string TargetLoadsToStr(const Interactive::Tunables &t, const Cluster &cl) {
@@ -70,6 +71,130 @@ std::string HispeedDelayToStr(const Interactive::Tunables &t, const Cluster &cl,
     }
 
     return buf.str();
+}
+
+template <typename T>
+nlohmann::json TunableToJson(const T &t, const Soc &soc) {
+    return nlohmann::json();
+}
+
+template <>
+nlohmann::json TunableToJson<GovernorTs<Interactive>>(const GovernorTs<Interactive> &t, const Soc &soc) {
+    nlohmann::json ret;
+
+    int cluster_num = soc.clusters_.size();
+    for (int idx_cluster = 0; idx_cluster < cluster_num; ++idx_cluster) {
+        const auto &g  = t.t[idx_cluster];
+        const auto &cl = soc.clusters_[idx_cluster];
+
+        auto multiple_to_us = [=](int multiple) { return Ms2Us(Quantum2Ms(multiple * 2) - 2); };
+
+        nlohmann::json cl_param;
+        cl_param["hispeed_freq"]        = Mhz2kHz(cl.freq_floor_to_opp(g.hispeed_freq));
+        cl_param["go_hispeed_load"]     = g.go_hispeed_load;
+        cl_param["min_sample_time"]     = multiple_to_us(g.min_sample_time);
+        cl_param["max_freq_hysteresis"] = multiple_to_us(g.max_freq_hysteresis);
+        cl_param["above_hispeed_delay"] = HispeedDelayToStr(g, cl, 2);
+        cl_param["target_loads"]        = TargetLoadsToStr(g, cl);
+        cl_param["min_freq"]            = cl.GetMinfreq();
+        cl_param["max_freq"]            = cl.GetMaxfreq();
+
+        ret.emplace_back(cl_param);
+    }
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<WaltHmp::Tunables>(const WaltHmp::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+    ret["sched_downmigrate"]         = t.sched_downmigrate;
+    ret["sched_upmigrate"]           = t.sched_upmigrate;
+    ret["sched_ravg_hist_size"]      = t.sched_ravg_hist_size;
+    ret["sched_window_stats_policy"] = t.sched_window_stats_policy;
+    ret["sched_boost"]               = t.sched_boost;
+    ret["timer_rate"]                = t.timer_rate;
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<PeltHmp::Tunables>(const PeltHmp::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+    ret["down_threshold"]     = t.down_threshold;
+    ret["up_threshold"]       = t.up_threshold;
+    ret["load_avg_period_ms"] = t.load_avg_period_ms;
+    ret["boost"]              = t.boost;
+    ret["timer_rate"]         = t.timer_rate;
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<InputBoostWalt::Tunables>(const InputBoostWalt::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+    if (soc.GetInputBoostFeature() == true) {
+        ret["freq"] = {t.boost_freq[0], t.boost_freq[1]};
+        ret["ms"]   = Quantum2Ms(t.duration_quantum);
+    }
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<InputBoostPelt::Tunables>(const InputBoostPelt::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+    if (soc.GetInputBoostFeature() == true) {
+        ret["freq"] = {t.boost_freq[0], t.boost_freq[1]};
+        ret["ms"]   = Quantum2Ms(t.duration_quantum);
+    }
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<UperfBoostWalt::Tunables>(const UperfBoostWalt::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+
+    int little_cl_idx = soc.GetLittleClusterIdx();
+    int big_cl_idx    = soc.GetBigClusterIdx();
+    Soc soc_boosted   = soc;
+    soc_boosted.clusters_[little_cl_idx].SetMinfreq(t.min_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMinfreq(t.min_freq[big_cl_idx]);
+    soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
+
+    GovernorTs<Interactive> ts;
+    ts.t[little_cl_idx] = t.little;
+    ts.t[big_cl_idx]    = t.big;
+
+    nlohmann::json sched;
+    sched["sched_upmigrate"]   = t.sched_up;
+    sched["sched_downmigrate"] = t.sched_down;
+
+    ret["cpufreq"] = TunableToJson<GovernorTs<Interactive>>(ts, soc_boosted);
+    ret["sched"]   = sched;
+    return ret;
+}
+
+template <>
+nlohmann::json TunableToJson<UperfBoostPelt::Tunables>(const UperfBoostPelt::Tunables &t, const Soc &soc) {
+    nlohmann::json ret;
+
+    int little_cl_idx = soc.GetLittleClusterIdx();
+    int big_cl_idx    = soc.GetBigClusterIdx();
+    Soc soc_boosted   = soc;
+    soc_boosted.clusters_[little_cl_idx].SetMinfreq(t.min_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMinfreq(t.min_freq[big_cl_idx]);
+    soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
+    soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
+
+    GovernorTs<Interactive> ts;
+    ts.t[little_cl_idx] = t.little;
+    ts.t[big_cl_idx]    = t.big;
+
+    nlohmann::json sched;
+    sched["up_threshold"]   = t.sched_up;
+    sched["down_threshold"] = t.sched_down;
+
+    ret["cpufreq"] = TunableToJson<GovernorTs<Interactive>>(ts, soc_boosted);
+    ret["sched"]   = sched;
+    return ret;
 }
 
 template <typename T>
@@ -230,7 +355,7 @@ std::string QcomFreqParamToStr(int freq0, int freq1, int ncore0, int ncore1) {
 }
 
 template <typename SimType>
-void Dumper<SimType>::DumpToTXT(const std::vector<typename OpengaAdapter<SimType>::Result> &results) const {
+void Dumper<SimType>::DumpToTXT(const OpengaResults &results) const {
     using namespace std;
     string   filename = soc_.name_ + ".txt";
     ofstream ofs(output_path_ + filename);
@@ -250,7 +375,7 @@ void Dumper<SimType>::DumpToTXT(const std::vector<typename OpengaAdapter<SimType
 }
 
 template <typename SimType>
-void Dumper<SimType>::DumpToCSV(const std::vector<typename OpengaAdapter<SimType>::Result> &results) const {
+void Dumper<SimType>::DumpToCSV(const OpengaResults &results) const {
     using namespace std;
     string   filename = soc_.name_ + ".csv";
     ofstream ofs(output_path_ + filename);
@@ -268,7 +393,7 @@ void Dumper<SimType>::DumpToCSV(const std::vector<typename OpengaAdapter<SimType
 }
 
 template <typename SimType>
-void Dumper<SimType>::DumpToShellScript(const std::vector<typename OpengaAdapter<SimType>::Result> &results) {
+void Dumper<SimType>::DumpToShellScript(const OpengaResults &results) {
     using namespace std;
     string filedir  = output_path_ + soc_.name_ + "/";
     string filepath = filedir + "powercfg.sh";
@@ -346,6 +471,65 @@ void Dumper<SimType>::DumpToShellScript(const std::vector<typename OpengaAdapter
 
     ofs << shell_template;
     return;
+}
+
+template <typename SimType>
+void Dumper<SimType>::DumpToUperfJson(const OpengaResults &results) const {
+    using namespace std;
+    string   filename = soc_.name_ + ".json";
+    ofstream ofs(output_path_ + filename);
+
+    // 性能评分低于level中续航最长的
+    auto find_level = [&results](float perf_thd) {
+        double max_batt_life = 0.0;
+        int    best_idx      = 0;
+        int    idx_ind       = 0;
+        for (const auto &r : results) {
+            if ((r.score.performance < perf_thd) && (r.score.battery_life > max_batt_life)) {
+                best_idx      = idx_ind;
+                max_batt_life = r.score.battery_life;
+            }
+            ++idx_ind;
+        }
+        return best_idx;
+    };
+
+    auto make_mode = [=](float perf_thd) {
+        const auto &r = results[find_level(perf_thd)];
+        const auto &t = r.tunable;
+        const auto &s = r.score;
+
+        nlohmann::json normal;
+        normal["cpufreq"] = TunableToJson<GovernorTs<typename SimType::Governor>>(t.governor, soc_);
+        normal["sched"]   = TunableToJson<typename SimType::Sched::Tunables>(t.sched, soc_);
+
+        nlohmann::json boost = TunableToJson<typename SimType::Boost::Tunables>(t.boost, soc_);
+
+        nlohmann::json mode;
+        mode["lag_percent"]  = s.performance;
+        mode["battery_life"] = s.battery_life;
+        mode["normal"]       = normal;
+        mode["boost"]        = boost;
+        return mode;
+    };
+
+    nlohmann::json uperf_data;
+    uperf_data["performance"] = make_mode(0.10);
+    uperf_data["balance"]     = make_mode(0.50);
+    uperf_data["powersave"]   = make_mode(0.90);
+
+    // pretty printing
+    ofs << uperf_data.dump(4);
+}
+
+template <>
+void Dumper<SimQcomBL>::DumpToUperfJson(const OpengaResults &results) const {
+    // 只有uperf支持json
+}
+
+template <>
+void Dumper<SimBL>::DumpToUperfJson(const OpengaResults &results) const {
+    // 只有uperf支持json
 }
 
 template <>
