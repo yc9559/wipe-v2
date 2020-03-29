@@ -23,7 +23,7 @@ public:
 
     Workload(const std::string &workload_file);
 
-    const float              kWorkloadScaleFactor = 1.15;
+    const float              kWorkloadScaleFactor = 1.1;
     std::vector<LoadSlice>   windowed_load_;
     std::vector<RenderSlice> render_load_;
     std::vector<std::string> src_;
