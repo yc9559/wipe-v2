@@ -2,6 +2,7 @@
 #define __HMP_H
 
 #include <stdint.h>
+
 #include "cpumodel.h"
 #include "interactive.h"
 
@@ -23,7 +24,9 @@ public:
           active_(big_),
           idle_(little_),
           governor_little_(cfg.governor_little),
-          governor_big_(cfg.governor_big) {
+          governor_big_(cfg.governor_big),
+          up_demand_thd_(0),
+          down_demand_thd_(0) {
         cluster_num_ = (big_ == little_) ? 1 : 2;
     }
 
@@ -42,6 +45,8 @@ protected:
     Interactive *governor_little_;
     Interactive *governor_big_;
     int          cluster_num_;
+    uint64_t     up_demand_thd_;
+    uint64_t     down_demand_thd_;
 };
 
 inline int Hmp::LoadToBusyPct(const Cluster *c, uint64_t load) const {

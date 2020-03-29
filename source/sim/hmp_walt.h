@@ -26,7 +26,7 @@ public:
     int SchedulerTick(int max_load, const int *loads, int n_load, int now);
 
     Tunables GetTunables(void) { return tunables_; }
-    void     SetTunables(const Tunables &t) { tunables_ = t; }
+    void     SetTunables(const Tunables &t);
 
 private:
 #define RavgHistSizeMax 5
@@ -35,8 +35,6 @@ private:
 
     Tunables tunables_;
     uint64_t demand_;
-    uint64_t up_demand_thd_;
-    uint64_t down_demand_thd_;
     int      sum_history_[RavgHistSizeMax];
     int      entry_cnt_;
     uint64_t max_load_sum_;

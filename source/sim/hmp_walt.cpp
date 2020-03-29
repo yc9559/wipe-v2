@@ -17,10 +17,17 @@ WaltHmp::Tunables::Tunables() {
 
 WaltHmp::WaltHmp(Cfg cfg)
     : Hmp(cfg), tunables_(cfg.tunables), demand_(0), entry_cnt_(0), max_load_sum_(0), governor_cnt_(0) {
-    up_demand_thd_   = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_upmigrate;
-    down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
+    SetTunables(cfg.tunables);
     memset(sum_history_, 0, sizeof(sum_history_));
     memset(loads_sum_, 0, sizeof(loads_sum_));
+}
+
+void WaltHmp::SetTunables(const Tunables &t) {
+    tunables_ = t;
+    // Hence this threshold is auto-adjusted by a factor
+    // equal to max_possible_frequency/current_frequency of a lower capacity CPU
+    up_demand_thd_   = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_upmigrate;
+    down_demand_thd_ = little_->model_.max_freq * little_->model_.efficiency * tunables_.sched_downmigrate;
 }
 
 // 更新负载滑动窗口，返回预计的负载需求，@in_demand为freq*busy_pct*efficiency

@@ -23,7 +23,7 @@ public:
     int SchedulerTick(int max_load, const int *loads, int n_load, int now);
 
     Tunables GetTunables(void) { return tunables_; }
-    void     SetTunables(const Tunables &t) { tunables_ = t; }
+    void     SetTunables(const Tunables &t);
 
 private:
     uint64_t UpdateBusyTime(int max_load);
@@ -31,8 +31,6 @@ private:
 
     Tunables tunables_;
     uint64_t demand_;
-    uint64_t up_demand_thd_;
-    uint64_t down_demand_thd_;
     int      entry_cnt_;
     uint64_t max_load_sum_;
     uint32_t decay_ratio_;

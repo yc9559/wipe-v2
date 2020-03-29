@@ -95,17 +95,15 @@ PeltHmp::Tunables::Tunables() {
 
 #define TICK_MS 10
 PeltHmp::PeltHmp(Cfg cfg)
-    : Hmp(cfg),
-      tunables_(cfg.tunables),
-      demand_(0),
-      up_demand_thd_(cfg.tunables.up_threshold),
-      down_demand_thd_(cfg.tunables.down_threshold),
-      entry_cnt_(0),
-      max_load_sum_(0),
-      decay_ratio_(0),
-      load_avg_max_(0),
-      governor_cnt_(0) {
+    : Hmp(cfg), demand_(0), entry_cnt_(0), max_load_sum_(0), decay_ratio_(0), load_avg_max_(0), governor_cnt_(0) {
+    SetTunables(cfg.tunables);
     InitDecay(TICK_MS, tunables_.load_avg_period_ms);
+}
+
+void PeltHmp::SetTunables(const Tunables &t) {
+    tunables_        = t;
+    up_demand_thd_   = tunables_.up_threshold;
+    down_demand_thd_ = tunables_.down_threshold;
 }
 
 void PeltHmp::InitDecay(int ms, int n) {
