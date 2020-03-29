@@ -51,7 +51,7 @@ UperfBoost<Interactive, WaltHmp>::Tunables::Tunables(const Soc *soc) {
     auto sched_tunables = WaltHmp::Tunables();
     for (int i = 0; i < cluster_num; ++i) {
         const auto &cl = soc->clusters_[i];
-        min_freq[i]    = cl.freq_floor_to_opp(cl.model_.max_freq * 0.6);
+        min_freq[i]    = cl.model_.min_freq;
         max_freq[i]    = cl.model_.max_freq;
     }
     sched_up   = sched_tunables.sched_upmigrate;
@@ -67,7 +67,7 @@ UperfBoost<Interactive, PeltHmp>::Tunables::Tunables(const Soc *soc) {
     auto sched_tunables = PeltHmp::Tunables();
     for (int i = 0; i < cluster_num; ++i) {
         const auto &cl = soc->clusters_[i];
-        min_freq[i]    = cl.freq_floor_to_opp(cl.model_.max_freq * 0.6);
+        min_freq[i]    = cl.model_.min_freq;
         max_freq[i]    = cl.model_.max_freq;
     }
     sched_up   = sched_tunables.up_threshold;
