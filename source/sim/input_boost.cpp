@@ -105,8 +105,8 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
         this->is_in_boost_ = true;
         return;
     }
-    // uperf在渲染结束后至多300ms停止hint
-    if (this->is_in_boost_ && cur_quantum - this->render_stop_quantum_ > 30) {
+    // uperf在渲染结束后至多400ms停止hint
+    if (this->is_in_boost_ && cur_quantum - this->render_stop_quantum_ > 40) {
         DoResume();
         this->is_in_boost_ = false;
     }
