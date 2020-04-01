@@ -79,7 +79,7 @@ int Interactive::InteractiveTimer(int load, int now) {
     }
 
     if (jump_to_max_no_ts || jump_to_max) {
-        new_freq = cluster_->model_.max_freq;
+        new_freq = cluster_->GetMaxfreq();
     } else if (!skip_hispeed_logic) {
         if (load >= tunables_.go_hispeed_load || boosted) {
             if (target_freq < tunables_.hispeed_freq)
@@ -126,7 +126,7 @@ int Interactive::InteractiveTimer(int load, int now) {
         floor_validate_time = now;
     }
 
-    if (new_freq >= cluster_->model_.max_freq && !jump_to_max_no_ts) {
+    if (new_freq >= cluster_->GetMaxfreq() && !jump_to_max_no_ts) {
         max_freq_hyst_start_time = now;
     }
     target_freq = new_freq;
