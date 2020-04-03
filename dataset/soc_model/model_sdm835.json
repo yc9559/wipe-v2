@@ -1,7 +1,7 @@
 {
     "name": "sdm835",
     "device": "小米6 模拟",
-    "enoughCapacityPct": 79,
+    "enoughCapacityPct": 82,
     "sched": "walt",
     "intra": "smp",
     "inputBoost": true,
@@ -90,7 +90,7 @@
             "coreNum": 4,
             "efficiency": 1638,
             "minFreq": 300,
-            "maxFreq": 2457,
+            "maxFreq": 2361,
             "opp": [
                 300,
                 345,
