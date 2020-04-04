@@ -3,9 +3,9 @@
 
 CC 			:= gcc
 CXX 		:= g++
-CFLAGS 		:= -std=c99
-CXXFLAGS 	:= -std=c++11
-LDFLAGS 	:= -Wl,--as-needed
+CFLAGS 		:= -std=c99 -flto
+CXXFLAGS 	:= -std=c++11 -flto
+LDFLAGS 	:= -Wl,--as-needed -flto
 
 SRC_DIR		:= ./source
 INC_DIR		:= ./source
