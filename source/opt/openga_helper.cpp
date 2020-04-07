@@ -485,7 +485,7 @@ void DefineBlock<UperfBoostWalt::Tunables>(ParamDesc &desc, const ParamDescCfg &
     }
     desc.push_back(p.sched_downmigrate);
     desc.push_back(p.sched_upmigrate);
-    DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
+    // DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
 }
 
 template <>
@@ -503,9 +503,9 @@ UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     t.sched_down = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = std::max(t.sched_down, t.sched_up);
-    auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
-    t.little     = iblk.t[soc->GetLittleClusterIdx()];
-    t.big        = iblk.t[soc->GetBigClusterIdx()];
+    // auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
+    // t.little     = iblk.t[soc->GetLittleClusterIdx()];
+    // t.big        = iblk.t[soc->GetBigClusterIdx()];
     t.enabled    = true;
 
     return std::move(t);
@@ -524,7 +524,7 @@ void DefineBlock<UperfBoostPelt::Tunables>(ParamDesc &desc, const ParamDescCfg &
     }
     desc.push_back(p.down_threshold);
     desc.push_back(p.up_threshold);
-    DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
+    // DefineBlock<GovernorTs<Interactive>>(desc, p, soc);
 }
 
 template <>
@@ -542,9 +542,9 @@ UperfBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     t.sched_down = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = Quantify(*it_seq++, *it_desc++);
     t.sched_up   = std::max(t.sched_down, t.sched_up);
-    auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
-    t.little     = iblk.t[soc->GetLittleClusterIdx()];
-    t.big        = iblk.t[soc->GetBigClusterIdx()];
+    // auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
+    // t.little     = iblk.t[soc->GetLittleClusterIdx()];
+    // t.big        = iblk.t[soc->GetBigClusterIdx()];
     t.enabled    = true;
 
     return std::move(t);

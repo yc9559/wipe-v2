@@ -128,8 +128,8 @@ void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interacti
     sched_tunables.sched_upmigrate   = t.sched_up;
     sched_tunables.sched_downmigrate = t.sched_down;
     sched->SetTunables(sched_tunables);
-    little->SetTunables(t.little);
-    big->SetTunables(t.big);
+    // little->SetTunables(t.little);
+    // big->SetTunables(t.big);
 }
 
 template <>
@@ -148,8 +148,8 @@ void UperfBoost<Interactive, PeltHmp>::Apply(const typename UperfBoost<Interacti
     sched_tunables.up_threshold   = t.sched_up;
     sched_tunables.down_threshold = t.sched_down;
     sched->SetTunables(sched_tunables);
-    little->SetTunables(t.little);
-    big->SetTunables(t.big);
+    // little->SetTunables(t.little);
+    // big->SetTunables(t.big);
 }
 
 template <>

@@ -302,10 +302,10 @@ void TunableToStream<UperfBoostWalt::Tunables>(std::ostringstream &os, const Upe
     soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
     soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
 
-    GovernorTs<Interactive> ts;
-    ts.t[little_cl_idx] = t.little;
-    ts.t[big_cl_idx]    = t.big;
-    TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
+    // GovernorTs<Interactive> ts;
+    // ts.t[little_cl_idx] = t.little;
+    // ts.t[big_cl_idx]    = t.big;
+    // TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
     os << endl;
 }
 
@@ -329,10 +329,10 @@ void TunableToStream<UperfBoostPelt::Tunables>(std::ostringstream &os, const Upe
     soc_boosted.clusters_[little_cl_idx].SetMaxfreq(t.max_freq[little_cl_idx]);
     soc_boosted.clusters_[big_cl_idx].SetMaxfreq(t.max_freq[big_cl_idx]);
 
-    GovernorTs<Interactive> ts;
-    ts.t[little_cl_idx] = t.little;
-    ts.t[big_cl_idx]    = t.big;
-    TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
+    // GovernorTs<Interactive> ts;
+    // ts.t[little_cl_idx] = t.little;
+    // ts.t[big_cl_idx]    = t.big;
+    // TunableToStream<GovernorTs<Interactive>>(os, ts, soc_boosted);
     os << endl;
 }
 
