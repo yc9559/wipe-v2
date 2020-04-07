@@ -1,7 +1,7 @@
 {
     "name": "sdm835",
     "device": "小米6 模拟",
-    "enoughCapacityPct": 82,
+    "enoughCapacityPct": 83,
     "sched": "walt",
     "intra": "smp",
     "inputBoost": true,
