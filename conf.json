@@ -71,11 +71,11 @@
         },
         "sched_downmigrate": {
             "min": 20,
-            "max": 99
+            "max": 95
         },
         "sched_upmigrate": {
             "min": 20,
-            "max": 99
+            "max": 95
         },
         "sched_ravg_hist_size": {
             "min": 5,
@@ -103,11 +103,11 @@
         },
         "down_threshold": {
             "min": 256,
-            "max": 1023
+            "max": 960
         },
         "up_threshold": {
             "min": 256,
-            "max": 1023
+            "max": 960
         },
         "boost": {
             "min": 0,
