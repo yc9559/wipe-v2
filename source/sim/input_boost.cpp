@@ -99,16 +99,19 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
     if (has_render) {
         this->render_stop_quantum_ = cur_quantum;
     }
-    if (!this->is_in_boost_ && has_input) {
-        this->render_stop_quantum_ = cur_quantum;
-        DoBoost();
-        this->is_in_boost_ = true;
-        return;
-    }
-    // uperf在渲染结束后至多400ms停止hint
-    if (this->is_in_boost_ && cur_quantum - this->render_stop_quantum_ > 40) {
-        DoResume();
-        this->is_in_boost_ = false;
+
+    if (this->is_in_boost_ == false) {
+        if (has_input) {
+            this->render_stop_quantum_ = cur_quantum;
+            DoBoost();
+            this->is_in_boost_ = true;
+        }
+    } else {
+        // uperf在渲染结束后至多300ms停止hint
+        if (cur_quantum - this->render_stop_quantum_ > 30) {
+            DoResume();
+            this->is_in_boost_ = false;
+        }
     }
 };
 
