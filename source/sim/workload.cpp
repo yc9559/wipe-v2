@@ -81,6 +81,8 @@ Workload::Workload(const std::string &workload_file) {
         for (int idx = 0; idx < core_num_; ++idx) {
             l.load[idx] = loadpct_to_demand(slice[idx + 1]);
         }
+        // 按降序排列，对于骁龙82x这种2+2的平台只会使用前2个负载值
+        std::sort(&l.load[0], &l.load[3], std::greater<int>());
         l.has_input_event = slice[core_num_ + 1];
         l.has_render      = has_render(windowed_load_.size());
 
