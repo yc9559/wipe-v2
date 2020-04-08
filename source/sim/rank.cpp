@@ -72,9 +72,14 @@ double Rank::EvalPerformance(const Workload &workload, const Soc &soc, const Sim
 double Rank::PerfPartitionEval(const LagSeq &lag_seq) const {
     const int partition_len = misc_.perf_partition_len;
     const int n_partition   = lag_seq.size() / partition_len;
-    const int seq_lag_l1    = misc_.seq_lag_l1;
-    const int seq_lag_l2    = misc_.seq_lag_l2;
-    const int seq_lag_max   = misc_.seq_lag_max;
+
+    const int &seq_lag_l1  = misc_.seq_lag_l1;
+    const int &seq_lag_l2  = misc_.seq_lag_l2;
+    const int &seq_lag_max = misc_.seq_lag_max;
+
+    const double &seq_l0_scale = misc_.seq_lag_l0_scale;
+    const double &seq_l1_scale = misc_.seq_lag_l1_scale;
+    const double &seq_l2_scale = misc_.seq_lag_l2_scale;
 
     LagSeq period_lag_arr;
     period_lag_arr.reserve(n_partition);
@@ -93,8 +98,10 @@ double Rank::PerfPartitionEval(const LagSeq &lag_seq) const {
             n_recent_lag = n_recent_lag >> 1;
         }
         n_recent_lag = std::min(seq_lag_max, n_recent_lag + is_lag);
-        period_lag_score += lag_scale * (n_recent_lag >= seq_lag_l1);
-        period_lag_score += lag_scale * (n_recent_lag >= seq_lag_l2);
+
+        period_lag_score += seq_l0_scale * lag_scale * (n_recent_lag > 0);
+        period_lag_score += seq_l1_scale * lag_scale * (n_recent_lag >= seq_lag_l1);
+        period_lag_score += seq_l2_scale * lag_scale * (n_recent_lag >= seq_lag_l2);
         ++cnt;
     }
 

@@ -28,6 +28,9 @@ public:
         int    seq_lag_l1;
         int    seq_lag_l2;
         int    seq_lag_max;
+        double seq_lag_l0_scale;
+        double seq_lag_l1_scale;
+        double seq_lag_l2_scale;
         double enough_penalty; 
         int    batt_partition_len;
     } MiscConst;

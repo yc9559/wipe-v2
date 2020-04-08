@@ -55,6 +55,9 @@ void OpengaAdapter<SimType>::ParseCfgFile(const std::string &ga_cfg_file) {
     rank_misc_.seq_lag_l1          = misc["eval.perf.seqLagL1"];
     rank_misc_.seq_lag_l2          = misc["eval.perf.seqLagL2"];
     rank_misc_.seq_lag_max         = misc["eval.perf.seqLagMax"];
+    rank_misc_.seq_lag_l0_scale    = misc["eval.perf.seqLagL0Scale"];
+    rank_misc_.seq_lag_l1_scale    = misc["eval.perf.seqLagL1Scale"];
+    rank_misc_.seq_lag_l2_scale    = misc["eval.perf.seqLagL2Scale"];
     rank_misc_.enough_penalty      = misc["eval.perf.enoughPenalty"];
     rank_misc_.complexity_fraction = misc["eval.complexityFraction"];
 
@@ -506,7 +509,7 @@ UperfBoostWalt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     // auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
     // t.little     = iblk.t[soc->GetLittleClusterIdx()];
     // t.big        = iblk.t[soc->GetBigClusterIdx()];
-    t.enabled    = true;
+    t.enabled = true;
 
     return std::move(t);
 }
@@ -545,7 +548,7 @@ UperfBoostPelt::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamD
     // auto iblk    = TranslateBlock<GovernorTs<Interactive>>(it_seq, it_desc, soc);
     // t.little     = iblk.t[soc->GetLittleClusterIdx()];
     // t.big        = iblk.t[soc->GetBigClusterIdx()];
-    t.enabled    = true;
+    t.enabled = true;
 
     return std::move(t);
 }
