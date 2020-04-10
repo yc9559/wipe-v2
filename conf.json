@@ -105,12 +105,12 @@
             "max": 128
         },
         "down_threshold": {
-            "min": 256,
-            "max": 960
+            "min": 214,
+            "max": 214
         },
         "up_threshold": {
-            "min": 256,
-            "max": 960
+            "min": 524,
+            "max": 524
         },
         "boost": {
             "min": 0,
