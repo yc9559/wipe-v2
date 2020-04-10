@@ -61,8 +61,8 @@
             "max": 99
         },
         "max_freq_hysteresis": {
-            "min": 1,
-            "max": 20
+            "min": 0,
+            "max": 0
         },
         "min_sample_time": {
             "min": 1,
