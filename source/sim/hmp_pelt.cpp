@@ -86,8 +86,8 @@ uint32_t CalcLoadAvgMax(uint32_t decay_ratio) {
 }
 
 PeltHmp::Tunables::Tunables() {
-    down_threshold     = 480;
-    up_threshold       = 640;
+    down_threshold     = 214;
+    up_threshold       = 524;
     load_avg_period_ms = 128;
     boost              = 0;
     timer_rate         = 2;
