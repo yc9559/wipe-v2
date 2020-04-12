@@ -407,6 +407,11 @@ WaltHmp::Tunables TranslateBlock(ParamSeq::const_iterator &it_seq, ParamDesc::co
     t.sched_window_stats_policy = Quantify(*it_seq++, *it_desc++);
     t.sched_boost               = Quantify(*it_seq++, *it_desc++);
     t.timer_rate                = Quantify(*it_seq++, *it_desc++);
+    // sdm625和sdm820使用平衡型负载迁移
+    if (soc->clusters_.size() < 2 || soc->clusters_[soc->GetLittleClusterIdx()].model_.core_num == 2) {
+        t.sched_downmigrate = 45;
+        t.sched_upmigrate   = 45;
+    }
     return std::move(t);
 }
 

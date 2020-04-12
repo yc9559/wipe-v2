@@ -118,8 +118,8 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
 template <>
 void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interactive, WaltHmp>::Tunables &t) {
     auto soc    = this->env_.soc;
-    auto little = this->env_.little;
-    auto big    = this->env_.big;
+    // auto little = this->env_.little;
+    // auto big    = this->env_.big;
     auto sched  = this->env_.sched;
 
     int  cluster_num    = soc->clusters_.size();
@@ -138,8 +138,8 @@ void UperfBoost<Interactive, WaltHmp>::Apply(const typename UperfBoost<Interacti
 template <>
 void UperfBoost<Interactive, PeltHmp>::Apply(const typename UperfBoost<Interactive, PeltHmp>::Tunables &t) {
     auto soc    = this->env_.soc;
-    auto little = this->env_.little;
-    auto big    = this->env_.big;
+    // auto little = this->env_.little;
+    // auto big    = this->env_.big;
     auto sched  = this->env_.sched;
 
     int  cluster_num    = soc->clusters_.size();
