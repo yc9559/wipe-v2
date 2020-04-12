@@ -97,6 +97,7 @@ public:
             AdaptLoad(w.load, idleload.core_num_, capacity);
             rp->offscreen_pwr += sched.CalcPowerForIdle(w.load);
 
+            boost.Tick(w.has_input_event, w.has_render, quantum_cnt);
             capacity = sched.SchedulerTick(w.max_load, w.load, idleload.core_num_, quantum_cnt);
             quantum_cnt++;
         }

@@ -96,6 +96,9 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
     if (tunables_.enabled == false)
         return;
 
+    if (has_input) {
+        this->input_happened_quantum_ = cur_quantum;
+    }
     if (has_render) {
         this->render_stop_quantum_ = cur_quantum;
     }
@@ -107,8 +110,10 @@ void UperfBoost<GovernorT, SchedT>::Tick(bool has_input, bool has_render, int cu
             this->is_in_boost_ = true;
         }
     } else {
-        // uperf在渲染结束后至多300ms停止hint
-        if (cur_quantum - this->render_stop_quantum_ > 30) {
+        // uperf在渲染结束后至多300ms，或者触摸停止后3000ms，停止hint
+        bool is_touch_timeout = cur_quantum - this->input_happened_quantum_ > 300;
+        bool is_render_stop = cur_quantum - this->render_stop_quantum_ > 30;
+        if (is_touch_timeout || is_render_stop) {
             DoResume();
             this->is_in_boost_ = false;
         }

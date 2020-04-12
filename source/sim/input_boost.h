@@ -64,13 +64,19 @@ public:
     };
 
     UperfBoost()
-        : Boost<GovernorT, SchedT>(), tunables_(), original_(), is_original_inited_(false), render_stop_quantum_(0) {}
+        : Boost<GovernorT, SchedT>(),
+          tunables_(),
+          original_(),
+          is_original_inited_(false),
+          render_stop_quantum_(0),
+          input_happened_quantum_(0) {}
     UperfBoost(const Tunables &tunables, const typename Boost<GovernorT, SchedT>::SysEnv &env)
         : Boost<GovernorT, SchedT>(env),
           tunables_(tunables),
           original_(),
           is_original_inited_(false),
-          render_stop_quantum_(0) {}
+          render_stop_quantum_(0),
+          input_happened_quantum_(0) {}
     void Tick(bool has_input, bool has_render, int cur_quantum);
 
 private:
@@ -81,8 +87,10 @@ private:
 
     Tunables tunables_;
     Tunables original_;
-    bool     is_original_inited_;
-    int      render_stop_quantum_;
+
+    bool is_original_inited_;
+    int  render_stop_quantum_;
+    int  input_happened_quantum_;
 };
 
 #endif

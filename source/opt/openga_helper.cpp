@@ -210,8 +210,8 @@ bool OpengaAdapter<SimType>::EvalParamSeq(const ParamSeq &param_seq, MiddleCost 
 
     SimType sim(t, sim_misc_);
     sim.Run(*workload_, *idleload_, *soc_, &rp);
-    Rank        rank(default_score_, rank_misc_);
-    Rank::Score score = rank.Eval(*workload_, *idleload_, rp, *soc_, false);
+    Rank rank(default_score_, rank_misc_);
+    auto score = rank.Eval(*workload_, *idleload_, rp, *soc_, false);
 
     result.c1 = score.performance;
     result.c2 = score.battery_life;
