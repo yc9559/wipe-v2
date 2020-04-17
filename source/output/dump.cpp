@@ -514,9 +514,9 @@ void Dumper<SimType>::DumpToUperfJson(const OpengaResults &results) const {
     };
 
     nlohmann::json uperf_data;
-    uperf_data["performance"] = make_mode(0.05);
+    uperf_data["performance"] = make_mode(0.10);
     uperf_data["balance"]     = make_mode(0.50);
-    uperf_data["powersave"]   = make_mode(1.05);
+    uperf_data["powersave"]   = make_mode(1.00);
 
     // pretty printing
     ofs << uperf_data.dump(4);
